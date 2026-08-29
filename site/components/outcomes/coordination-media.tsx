@@ -12,7 +12,7 @@ export function EvidenceImage({ media, title, playing = false, history = false }
   return <figure className={styles.mediaCard}><div className={styles.mediaFrame}>
     {!available ? <div className={styles.unavailable}><strong>Matching media unavailable</strong><span>{media?.reason ?? 'No image is available for this assignment.'}</span></div>
       : playing && media.videoUrl && !history ? <video key={media.videoUrl} src={media.videoUrl} poster={media.imageUrl} autoPlay muted loop playsInline onError={() => setFailed(true)} aria-label={title} />
-      : <Image src={media.imageUrl} alt={title} width={1536} height={1024} onError={() => setFailed(true)} />}
+      : <Image src={media!.imageUrl!} alt={title} width={1536} height={1024} onError={() => setFailed(true)} />}
     {available && <span className={styles.mediaLabel}>{label}</span>}
   </div><figcaption><strong>{title}</strong>{available && <small>{media.kind === 'synthetic_illustration' ? 'Synthetic illustration' : 'Simulated video frame · ' + media.sourceClip + ' · ' + media.offsetSeconds + 's'}{media.checkpointTime ? ' · Checkpoint ' + new Date(media.checkpointTime).toLocaleTimeString() : ''}</small>}</figcaption></figure>;
 }

@@ -74,6 +74,15 @@ class OutcomeApiTests(unittest.TestCase):
         )
         self.assertEqual(200, completed.status_code)
         self.assertEqual("completed", completed.json()["status"])
+        listing = self.client.get("/api/v1/outcomes")
+        self.assertEqual(outcome["id"], listing.json()["outcomes"][0]["id"])
+        history = self.client.get(f"/api/v1/outcomes/{outcome['id']}/history")
+        self.assertGreater(len(history.json()["checkpoints"]), 10)
+        sequence = history.json()["checkpoints"][0]["sequence"]
+        snapshot = self.client.get(f"/api/v1/outcomes/{outcome['id']}/snapshots/{sequence}")
+        self.assertEqual("scheduled", snapshot.json()["status"])
+        self.assertTrue(snapshot.json()["historical"])
+        self.assertEqual([], snapshot.json()["permitted_actions"])
 
     def test_home_worker_roster_and_error_envelope(self):
         workers = self.client.get("/api/v1/home/workers")
