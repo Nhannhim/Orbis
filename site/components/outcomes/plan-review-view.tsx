@@ -1,54 +1,23 @@
 'use client';
-
-import { ArrowLeft, Check, Clock3, CreditCard, ListChecks, ShieldCheck, ShoppingBasket, UsersRound } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { ArrowLeft } from 'lucide-react';
 import type { OutcomePlanView } from '@/lib/outcome-api';
-import { displayToken, formatTime, OutcomeEyebrow } from './outcome-ui';
-import styles from './outcomes.module.css';
+import styles from './revision.module.css';
 
+const phases = [
+  ['Home preparation + warehouse fulfillment', 'Roomba, Loader, Furniture Robot and Lamp prepare the home while specialized pickers assemble the order.', 'Home preparation and warehouse picking run independently. Each robot receives one assignment at a time.'],
+  ['Inspection + delivery', 'Inspect the package, then pack, move, load and deliver with an eligible robot.', 'Package uncertainty or damage goes to a human inspector. Delivery selection uses the manifest and vehicle capabilities.'],
+  ['Cooking + serving', 'Loader receives → Humanoid cooks → Humanoid plates → Loader serves.', 'Dinner Ready waits for serving, the prepared room, table setup and dinner lighting.'],
+  ['Cleanup + restoration', 'Clear, store, restore and clean after you confirm dinner is over.', 'Loader and Humanoid work in parallel. Furniture movement waits for clearance; final floor cleaning waits for the furniture.'],
+];
 export function PlanReviewView({ plan, busy = false, onBack, onApprove }: { plan: OutcomePlanView; busy?: boolean; onBack?: () => void; onApprove: () => void }) {
-  const laneWorkers = plan.workers.reduce<Record<string, string[]>>((groups, worker) => {
-    const key = worker.location?.toLowerCase().includes('home') || worker.id.startsWith('home-') ? 'Home' : worker.id.startsWith('delivery-') ? 'Delivery' : 'Warehouse';
-    groups[key] = [...(groups[key] ?? []), worker.name];
-    return groups;
-  }, {});
-  return (
-    <section className={styles.screen}>
-      <header className={styles.screenHeader}>
-        <div>{onBack && <button className={styles.iconButton} type="button" onClick={onBack} aria-label="Back to task request"><ArrowLeft /></button>}<div><OutcomeEyebrow>Plan ready for review</OutcomeEyebrow><h1>{plan.title}</h1><p>{plan.objective}</p></div></div>
-        <div className={styles.deadline}><Clock3 /><span><small>Ready by</small><strong>{formatTime(plan.readyBy) ?? '7:00 PM'}</strong></span></div>
-      </header>
-
-      <div className={styles.summaryStrip}>
-        <span><UsersRound /><small>Guests</small><strong>{plan.guestCount}</strong></span>
-        <span><ShoppingBasket /><small>Order</small><strong>{plan.orderItems.length} items</strong></span>
-        <span><CreditCard /><small>Estimate</small><strong>{plan.estimatedCost ?? 'Review at checkout'}</strong></span>
-        <span><Clock3 /><small>Schedule buffer</small><strong>15 minutes</strong></span>
-      </div>
-
-      <div className={styles.planGrid}>
-        <section className={styles.card}>
-          <header><div><small>Menu and order</small><h2>{plan.menu.join(' · ') || 'Vegetarian pasta dinner'}</h2></div><ShoppingBasket /></header>
-          <div className={styles.orderList}>{plan.orderItems.map((item) => <article key={item.id}><span><strong>{item.name}</strong><small>{item.category ? displayToken(item.category) : 'Ingredient'}{item.substitution ? ` · Substitute: ${item.substitution}` : ''}</small></span><b>{item.quantity}</b></article>)}</div>
-        </section>
-        <section className={styles.card}>
-          <header><div><small>Coordinated workers</small><h2>Three environments, one outcome</h2></div><UsersRound /></header>
-          <div className={styles.workerGroups}>{Object.entries(laneWorkers).map(([lane, workers]) => <article key={lane}><strong>{lane}</strong><p>{workers.join(' · ')}</p></article>)}</div>
-        </section>
-        <section className={styles.card}>
-          <header><div><small>Schedule</small><h2>Parallel work plan</h2></div><Clock3 /></header>
-          <div className={styles.schedule}>{plan.schedule.map((item, index) => <article key={item.id}><span>{index + 1}</span><div><strong>{item.label}</strong>{item.detail && <small>{item.detail}</small>}</div><time>{item.time ? formatTime(item.time) ?? item.time : 'Planned'}</time></article>)}</div>
-        </section>
-        <section className={styles.card}>
-          <header><div><small>Policies and proof</small><h2>Execution guardrails</h2></div><ShieldCheck /></header>
-          <ul className={styles.checkList}>{plan.policies.map((policy) => <li key={policy}><Check /> {policy}</li>)}</ul>
-          {plan.assumptions.length > 0 && <div className={styles.assumptions}><strong>Assumptions</strong><p>{plan.assumptions.join(' · ')}</p></div>}
-        </section>
-      </div>
-      <footer className={styles.stickyAction}>
-        <span><ListChecks /><span><strong>Approval is a hard gate</strong><small>No purchase or robot execution starts until you approve.</small></span></span>
-        <Button type="button" onClick={onApprove} disabled={busy}>{busy ? 'Approving…' : 'Approve order & start'} <Check /></Button>
-      </footer>
-    </section>
-  );
+  return <section className={styles.page}>
+    {onBack && <button className={styles.secondary} onClick={onBack}><ArrowLeft size={14} /> Back</button>}
+    <header><span className={styles.eyebrow}>Plan ready for review</span><h1>{plan.title}</h1><p>{plan.objective}</p></header>
+    <div className={styles.metrics}><span><small>Guests</small><b>{plan.guestCount}</b></span><span><small>Ready by</small><b>{plan.readyBy ?? 'Not specified'}</b></span><span><small>Estimated price</small><b>{plan.estimatedCost ?? 'Not available'}</b></span></div>
+    {phases.map(([title, summary, detail], i) => <details className={styles.accordion} key={title}><summary>{i + 1} · {title}<small>{summary}</small></summary><div className={styles.accordionBody}><p>{detail}</p></div></details>)}
+    <details className={styles.accordion}><summary>Menu & order details <small>{plan.menu.join(' · ')} · {plan.orderItems.length} items</small></summary><div className={styles.accordionBody}>{plan.orderItems.map(item => <div className={styles.orderRow} key={item.id}><span>{item.name}</span><b>{item.quantity}</b></div>)}</div></details>
+    <details className={styles.accordion}><summary>Worker inventory</summary><div className={styles.accordionBody}>{plan.workers.map(worker => <div className={styles.orderRow} key={worker.id}><span>{worker.name}</span><small>{worker.kind}</small></div>)}</div></details>
+    <details className={styles.accordion}><summary>Safeguards & simulation limits</summary><div className={styles.accordionBody}><ul>{[...plan.policies, ...plan.assumptions].map(p => <li key={p}>{p}</li>)}</ul><p>Images illustrate the demonstration; they do not independently verify physical conditions or food safety.</p></div></details>
+    <footer className={styles.actions}><span className={styles.muted}>Approval starts simulated execution.<br />No real purchase or robot dispatch.</span><button className={styles.primary} onClick={onApprove} disabled={busy}>{busy ? 'Starting…' : 'Approve & start'}</button></footer>
+  </section>;
 }

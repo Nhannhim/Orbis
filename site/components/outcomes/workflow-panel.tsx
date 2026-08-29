@@ -1,75 +1,46 @@
 'use client';
+import { useState } from 'react';
+import type { OutcomeCheckpoint, OutcomeTaskView, OutcomeView } from '@/lib/outcome-api';
+import { activeTask, allTasks, taskRows, taskStatus, workerName } from './coordination-utils';
+import styles from './revision.module.css';
 
-import { Activity, ArrowDown, Check, House, LockKeyhole, PackageCheck, Sparkles, Truck, UtensilsCrossed, Warehouse } from 'lucide-react';
-import type { OutcomeLaneView, OutcomeTaskView, OutcomeView } from '@/lib/outcome-api';
-import { displayToken, ProgressBar, StatusIcon } from './outcome-ui';
-import styles from './outcomes.module.css';
-
-export function OutcomeWorkflowPanel({ outcome, selectedTaskId, onSelectTask, onClose }: {
-  outcome: OutcomeView;
-  selectedTaskId?: string;
-  onSelectTask?: (task: OutcomeTaskView) => void;
-  onClose?: () => void;
+export function OutcomeWorkflowPanel({ outcome, selectedTaskId, onSelectTask, onClose, preview = false, historyMode = false, checkpoints = [], onHistory, onLive, onCheckpoint, historyLoading = false }: {
+  outcome: OutcomeView; selectedTaskId?: string; onSelectTask?: (task: OutcomeTaskView) => void; onClose?: () => void;
+  preview?: boolean; historyMode?: boolean; checkpoints?: OutcomeCheckpoint[]; onHistory?: () => void; onLive?: () => void; onCheckpoint?: (point: OutcomeCheckpoint) => void; historyLoading?: boolean;
 }) {
-  const warehouse = outcome.lanes.find((lane) => lane.id === 'warehouse');
-  const delivery = outcome.lanes.find((lane) => lane.id === 'delivery');
-  const home = outcome.lanes.find((lane) => lane.id === 'home');
-  const groceriesReceived = findTask(home, /receive|grocery|delivery handoff/i);
-  const cooking = findTask(home, /cook|prepare meal|plate/i);
-  const cleanup = findTask(home, /clean|restore|leftover/i, true);
-
-  return (
-    <aside className={styles.workflowPanel}>
-      <header><div><h2>Workflow</h2><p>{outcome.id} · {outcome.title}</p></div><span className={styles.liveLabel}><i /> {outcome.mode === 'live' ? 'LIVE' : 'SIMULATED'}</span>{onClose && <button type="button" onClick={onClose} aria-label="Close workflow panel">×</button>}</header>
-      <div className={styles.panelSummary}><span>{displayToken(outcome.phase)}</span><span>{outcome.lanes.reduce((sum, lane) => sum + lane.tasks.length, 0)} tasks</span><span>{outcome.progress}%</span></div>
-      <div className={styles.graphScroll}>
-        <div className={styles.graphOrigin}><small>Outcome</small><strong>{outcome.title}</strong></div>
-        <ArrowDown className={styles.graphArrow} />
-        <div className={styles.parallelNotice}><Activity /><span><strong>Running in parallel</strong><small>Warehouse and Home advance independently</small></span></div>
-        <div className={styles.parallelGraph}>
-          {warehouse && <LaneGraph lane={warehouse} icon={<Warehouse />} selectedTaskId={selectedTaskId} onSelectTask={onSelectTask} />}
-          {home && <LaneGraph lane={home} icon={<House />} selectedTaskId={selectedTaskId} onSelectTask={onSelectTask} stopBefore={groceriesReceived?.id} />}
-        </div>
-        <div className={styles.joinLabel}><span>Parallel work joins at delivery</span></div>
-        {delivery && <CompactNode title="Deliver groceries" detail={delivery.currentAction ?? delivery.nextAction ?? 'Waiting for package clearance'} status={laneNodeStatus(delivery)} icon={<Truck />} blockedBy={delivery.blockedBy} />}
-        <ArrowDown className={styles.graphArrow} />
-        <CompactNode task={groceriesReceived} title="Groceries received" detail="Loader Robot accepts manifest and custody" status={groceriesReceived?.status ?? 'queued'} icon={<PackageCheck />} selected={groceriesReceived?.id === selectedTaskId} onSelect={onSelectTask} />
-        <ArrowDown className={styles.graphArrow} />
-        <CompactNode task={cooking} title="Cook dinner" detail="Humanoid Cook prepares and plates the meal" status={cooking?.status ?? 'queued'} icon={<UtensilsCrossed />} selected={cooking?.id === selectedTaskId} onSelect={onSelectTask} />
-        <ArrowDown className={styles.graphArrow} />
-        <CompactNode title="Dinner ready" detail="Meal, room, table, and safety verified" status={outcome.status === 'dinner_ready' || ['cleaning_up', 'completed'].includes(outcome.status) ? 'completed' : 'queued'} icon={<Sparkles />} />
-        <div className={styles.hostGate}><LockKeyhole /><span><strong>Host gate</strong><small>Cleanup begins only after confirmation</small></span></div>
-        <ArrowDown className={styles.graphArrow} />
-        <CompactNode task={cleanup} title="Cleanup and restore" detail="Clear, store, reset, clean, and verify" status={outcome.status === 'completed' ? 'completed' : cleanup?.status ?? (outcome.status === 'cleaning_up' ? 'executing' : 'blocked')} icon={<Check />} selected={cleanup?.id === selectedTaskId} onSelect={onSelectTask} />
-      </div>
-      <footer><div><span>Current action</span><strong>{outcome.currentAction ?? 'Evaluating dependencies'}</strong><p>{outcome.currentWorkerName ?? outcome.blockedBy ?? 'Orbis outcome coordinator'}</p></div><ProgressBar value={outcome.progress} /></footer>
-    </aside>
-  );
-}
-
-function LaneGraph({ lane, icon, selectedTaskId, onSelectTask, stopBefore }: { lane: OutcomeLaneView; icon: React.ReactNode; selectedTaskId?: string; onSelectTask?: (task: OutcomeTaskView) => void; stopBefore?: string }) {
-  const tasks = stopBefore ? lane.tasks.slice(0, Math.max(0, lane.tasks.findIndex((task) => task.id === stopBefore))) : lane.tasks;
-  const active = tasks.filter((task) => ['reserved', 'executing', 'verifying', 'attention_required'].includes(task.status));
-  const focus = active[0] ?? tasks.find((task) => task.status === 'ready') ?? tasks.find((task) => task.status === 'queued') ?? tasks.at(-1);
-  const completed = tasks.filter((task) => ['completed', 'skipped'].includes(task.status)).length;
-  return <section className={styles.graphLane}><header><span>{icon}</span><div><small>{displayToken(lane.status)}</small><strong>{lane.label}</strong></div><em>{lane.progress}%</em></header><div>{focus && <CompactNode task={focus} title={focus.title} detail={focus.currentAction ?? focus.workerName ?? 'Waiting for release'} status={focus.status} blockedBy={focus.blockingReasons[0]} selected={focus.id === selectedTaskId} onSelect={onSelectTask} />}<footer className={styles.laneSummaryMeta}><span>{completed} of {tasks.length} complete</span>{active.length > 1 && <strong>+{active.length - 1} also working</strong>}</footer></div></section>;
-}
-
-function CompactNode({ task, title, detail, status, icon, blockedBy, selected, onSelect }: { task?: OutcomeTaskView; title: string; detail: string; status: string; icon?: React.ReactNode; blockedBy?: string; selected?: boolean; onSelect?: (task: OutcomeTaskView) => void }) {
-  const content = <><span className={styles.graphNodeIcon}>{icon ?? <StatusIcon status={status} />}</span><span><strong>{title}</strong><small>{detail}</small>{blockedBy && <em><LockKeyhole /> {displayToken(blockedBy)}</em>}</span><i className={`${styles.nodeStatus} ${styles[`status_${status}`] ?? ''}`}><StatusIcon status={status} /></i></>;
-  if (task && onSelect) return <button className={`${styles.graphNode} ${selected ? styles.selected : ''}`} type="button" onClick={() => onSelect(task)}>{content}</button>;
-  return <article className={`${styles.graphNode} ${selected ? styles.selected : ''}`}>{content}</article>;
-}
-
-function findTask(lane: OutcomeLaneView | undefined, pattern: RegExp, last = false) {
-  if (!lane) return undefined;
-  const matches = lane.tasks.filter((task) => pattern.test(`${task.id} ${task.title} ${task.description ?? ''}`));
-  return last ? matches.at(-1) : matches[0];
-}
-
-function laneNodeStatus(lane: OutcomeLaneView): string {
-  if (lane.status === 'completed') return 'completed';
-  if (lane.blockedBy || ['blocked', 'attention_required'].includes(lane.status)) return 'blocked';
-  if (['executing', 'in_transit', 'arrived'].includes(lane.status)) return 'executing';
-  return 'queued';
+  const [tab, setTab] = useState('overview');
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const [allEvents, setAllEvents] = useState(false);
+  const tasks = allTasks(outcome);
+  const points = allEvents ? checkpoints : checkpoints.filter(c => /dinner.ready|outcome.completed|attention|review|custody|cleanup.started|outcome.approved/.test(c.type));
+  const selected = tasks.find(t => t.id === selectedTaskId);
+  const node = (task: OutcomeTaskView) => <button key={task.id} type="button" onClick={() => onSelectTask?.(task)} aria-pressed={task.id === selectedTaskId} className={[styles.robot, activeTask(task) ? styles.active : '', ['blocked','attention_required'].includes(task.status) ? styles.blocked : '', task.status === 'completed' ? styles.done : '', task.id === selectedTaskId ? styles.selected : ''].join(' ')}>
+    <strong>{workerName(outcome, task)}</strong><span>{task.title}</span><em>{taskStatus(task, tasks, preview)}</em>
+    {task.dependencies.length > 0 && <small className={styles.dependencies}>After {task.dependencies.map(id => tasks.find(t => t.id === id)?.title ?? id).join(' + ')}</small>}
+  </button>;
+  return <aside className={styles.panel}>
+    <header className={styles.panelHeader}><div className={styles.panelHeading}><h2>Workflow</h2><small className={styles.eyebrow}>{preview ? 'Proposed' : historyMode ? 'History' : 'Simulated'}</small>{onClose && <button onClick={onClose} aria-label="Close workflow panel">×</button>}</div>
+      <p>{outcome.title}</p>
+      {!preview && <div className={styles.tabs}><button aria-pressed={!historyMode} onClick={onLive}>Live</button><button aria-pressed={historyMode} onClick={onHistory}>History</button></div>}
+      <div className={styles.summary}><span>{preview ? 'Approval required' : historyMode ? 'Recorded checkpoint' : outcome.status.replaceAll('_', ' ')}</span><span>{outcome.progress}%</span><span>{tasks.length} tasks</span></div>
+      <div className={styles.tabs}><button aria-pressed={tab === 'overview'} onClick={() => setTab('overview')}>Overview</button><button aria-pressed={tab === 'tasks'} onClick={() => setTab('tasks')}>Tasks</button></div>
+    </header>
+    <div className={styles.graph}>
+      {historyMode && <section><span className={styles.muted}>Session checkpoints · live work continues</span><div className={styles.checkpointList}>{points.map(c => <button key={c.sequence} aria-pressed={outcome.latestSequence === c.sequence} onClick={() => onCheckpoint?.(c)}>{c.message}<time>{new Date(c.occurredAt).toLocaleTimeString()}</time></button>)}</div><button className={styles.secondary} onClick={() => setAllEvents(!allEvents)}>{allEvents ? 'Milestones only' : 'All task transitions'}</button>{historyLoading && <output>Loading checkpoint…</output>}</section>}
+      {tab === 'tasks' ? <div className={styles.groupBody}>{tasks.map(node)}</div> : <>
+        {outcome.phaseGroups.map((group, i) => {
+          const members = group.taskIds.map(id => tasks.find(t => t.id === id)).filter((t): t is OutcomeTaskView => !!t);
+          const open = expanded[group.id] ?? (preview ? i === 0 : ['executing','attention_required'].includes(group.status) || (outcome.status === 'dinner_ready' && group.id === 'dinner'));
+          return <section className={styles.group} key={group.id}><button className={styles.groupToggle} aria-expanded={open} aria-controls={'phase-' + group.id} onClick={() => setExpanded(s => ({...s, [group.id]: !open}))}><span>{i + 1} · {group.title}<small>{preview ? 'Proposed assignments' : group.completedCount + ' / ' + group.taskCount + ' done'}</small></span>{open ? '−' : '+'}</button>
+            {open && <div className={styles.groupBody} id={'phase-' + group.id}>
+              {group.id === 'cleanup' && <div className={styles.gate}>{members.find(t => t.id === 'cleanup_gate')?.status === 'completed' ? '✓ Host confirmed dinner is over' : 'Host decision: start cleanup or keep waiting'}</div>}
+              {taskRows(members).map((row, r) => <div key={r}>{r > 0 && <div className={styles.connector} />}{row.length > 1 && <div className={styles.parallelLabel}>INDEPENDENT BRANCHES · PARALLEL WHEN READY</div>}<div className={styles.row + (row.length === 1 ? ' ' + styles.single : '')}>{row.map(node)}</div></div>)}
+              {group.id === 'delivery' && <><div className={styles.decision}><strong>Package decision</strong><div className={styles.branches}><div>Clear → packing<small>Only a cleared policy releases physical work.</small></div><div>Needs review → Human Inspector<small>Correction or remediation → re-evaluate.</small></div></div></div><div className={styles.decision}><strong>Delivery candidates · simulated routing</strong><div className={styles.branches}>{outcome.routingCandidates.map(c => <div key={c.id}>{c.name}<small>{c.selected ? 'Recommended' : c.eligible ? 'Eligible' : 'Not eligible'}</small><small>{c.reasons.join(' · ')}</small></div>)}</div></div></>}
+            </div>}
+          </section>;
+        })}
+      </>}
+    </div>
+    <footer className={styles.panelFooter}>{selected ? 'Selected assignment' : historyMode ? 'Recorded state' : 'Current work'}<strong>{selected ? workerName(outcome, selected) + ' · ' + selected.title : outcome.status === 'completed' ? 'Dinner served. Home restored.' : outcome.status === 'dinner_ready' ? 'Dinner ready · waiting for host' : outcome.currentAction ?? (preview ? 'Nothing starts before approval' : 'Waiting for dependencies')}</strong></footer>
+  </aside>;
 }
