@@ -1,13 +1,20 @@
 import {
+  Armchair,
   ArrowRight,
   ArrowUpRight,
   Box,
-  Factory,
-  HeartPulse,
+  House,
+  Lightbulb,
   Network,
+  PackageCheck,
+  Play,
+  Route,
   ScanLine,
   ShieldCheck,
+  Sparkles,
+  SprayCan,
   Truck,
+  UtensilsCrossed,
   Warehouse,
 } from 'lucide-react';
 import { OrbisMark } from '@/components/orbis-mark';
@@ -70,7 +77,8 @@ export default function Home() {
           </h1>
           <p className="marketing-lede">
             Orbis is the coordination layer for machines that perceive, verify,
-            and act together—from a single warehouse to the global movement of goods.
+            and act together—from an end-to-end delivery network to a home that
+            prepares itself around the people arriving.
           </p>
           <div className="hero-actions">
             <a className="primary-link" href="/app">
@@ -161,26 +169,111 @@ export default function Home() {
       <section className="applications-section" id="applications">
         <div className="section-intro">
           <p className="section-index">APPLICATIONS / 04</p>
-          <div><h2>From one facility to an entire physical network.</h2></div>
+          <div>
+            <h2>Describe the outcome. Orbis composes the physical world around it.</h2>
+            <p>
+              Each objective becomes a spatial plan: the machines, handoffs, room
+              states, and evidence needed to make the result real.
+            </p>
+          </div>
         </div>
-        <div className="application-grid">
-          <article>
-            <Warehouse size={25} strokeWidth={1.35} />
-            <span>01</span>
-            <h3>Logistics</h3>
-            <p>Coordinate packing cells, mobile robots, docks, vehicles, and receiving systems as one continuous workflow.</p>
+
+        <div className="use-case-stack">
+          <article className="use-case-card use-case-card--warehouse">
+            <div className="use-case-media">
+              <img
+                src="/images/orbis-warehouse-journey.jpg"
+                alt="A parcel moving from a warehouse robot to a packing arm, truck, autonomous road vehicle, and porch delivery robot."
+                loading="lazy"
+              />
+              <div className="use-case-media-topline">
+                <span>GENERATED WORLD / WAREHOUSE TO DOORSTEP</span>
+                <span><Play size={11} fill="currentColor" /> Motion-ready scene</span>
+              </div>
+              <div className="use-case-media-caption">
+                <span><i /> ORD-1042</span>
+                <strong>One object · five custody transfers</strong>
+              </div>
+            </div>
+
+            <div className="use-case-copy">
+              <div className="use-case-heading">
+                <div>
+                  <span><Warehouse size={17} /> USE CASE 01 · WAREHOUSES</span>
+                  <h3>One package.<br />One continuous plan.</h3>
+                </div>
+                <p>
+                  Orbis keeps the object, intent, and proof intact as work moves
+                  across robots, infrastructure, and transportation networks.
+                </p>
+              </div>
+
+              <div className="use-case-prompt">
+                <span>HUMAN OBJECTIVE</span>
+                <p>“Deliver package ORD-1042 from shelf C2 to the customer&apos;s porch.”</p>
+                <Route size={20} />
+              </div>
+
+              <ol className="journey-grid">
+                <li><span>01</span><Box /><strong>Pick</strong><p>A mobile robot identifies and lifts the parcel.</p></li>
+                <li><span>02</span><PackageCheck /><strong>Pack</strong><p>The packing arm seals, weighs, and verifies it.</p></li>
+                <li><span>03</span><Truck /><strong>Linehaul</strong><p>The dock loads the truck and signs custody over.</p></li>
+                <li><span>04</span><Route /><strong>Autonomous road</strong><p>A Waymo-class vehicle accepts the final-mile route.</p></li>
+                <li><span>05</span><House /><strong>Doorstep</strong><p>The delivery robot places it on the porch and proves arrival.</p></li>
+              </ol>
+            </div>
           </article>
-          <article>
-            <Factory size={25} strokeWidth={1.35} />
-            <span>02</span>
-            <h3>Manufacturing</h3>
-            <p>Synchronize production equipment around changing demand, machine health, material state, and quality evidence.</p>
-          </article>
-          <article>
-            <HeartPulse size={25} strokeWidth={1.35} />
-            <span>03</span>
-            <h3>Clinical environments</h3>
-            <p>Coordinate certified systems through policy-bound workflows with explicit human authority and complete auditability.</p>
+
+          <article className="use-case-card use-case-card--home">
+            <div className="use-case-media">
+              <img
+                src="/images/orbis-home-dinner-reset.jpg"
+                alt="Home robots rearranging furniture, cleaning, setting a table for sixteen, and tuning warm evening lighting."
+                loading="lazy"
+              />
+              <div className="use-case-media-topline">
+                <span>GENERATED WORLD / HOME RESET</span>
+                <span><Play size={11} fill="currentColor" /> Motion-ready scene</span>
+              </div>
+              <div className="use-case-media-caption">
+                <span><i /> DINNER FOR 16</span>
+                <strong>Five coordinated room changes</strong>
+              </div>
+            </div>
+
+            <div className="use-case-copy">
+              <div className="use-case-heading">
+                <div>
+                  <span><Armchair size={17} /> USE CASE 02 · HOME APPLIANCES</span>
+                  <h3>A home that resets<br />around your plans.</h3>
+                </div>
+                <p>
+                  A single prompt becomes a room layout and a coordinated task plan.
+                  Orbis adapts the same space for an intimate date or a dinner for twenty.
+                </p>
+              </div>
+
+              <div className="use-case-prompt use-case-prompt--home">
+                <span>HUMAN OBJECTIVE</span>
+                <p>“Prepare the house for dinner with 16 at 7 PM. Make it warm, open, and ready before guests arrive.”</p>
+                <Sparkles size={20} />
+              </div>
+
+              <div className="home-settings" aria-label="The room settings Orbis coordinates">
+                <div><Lightbulb /><span><strong>Lights</strong><small>Warm 2700K layers</small></span></div>
+                <div><Armchair /><span><strong>Room layout</strong><small>Conversation + dining zones</small></span></div>
+                <div><SprayCan /><span><strong>Cleanliness</strong><small>Vacuum, mop, clear surfaces</small></span></div>
+                <div><Sparkles /><span><strong>Decoration</strong><small>Greenery, linens, candles</small></span></div>
+                <div><UtensilsCrossed /><span><strong>Other tasks</strong><small>Set 16 places, stage dishes</small></span></div>
+              </div>
+
+              <div className="layout-presets">
+                <span>ONE ROOM / THREE OUTCOMES</span>
+                <div><strong>Date night</strong><small>2 people · intimate</small></div>
+                <div className="is-active"><strong>Dinner</strong><small>10–16 · social</small></div>
+                <div><strong>Gathering</strong><small>20 people · open</small></div>
+              </div>
+            </div>
           </article>
         </div>
       </section>
