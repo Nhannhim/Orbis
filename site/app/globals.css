@@ -1950,3 +1950,102 @@
   .ow-machine-grid { grid-template-columns: 1fr; }
   .ow-task-board { grid-template-columns: repeat(2,minmax(150px,1fr)); }
 }
+
+/* Codex-style task sessions and panel controls */
+.ow-app.is-sidebar-closed { grid-template-columns: 0 minmax(0, 1fr); }
+.ow-app.is-sidebar-closed .ow-shell { border-left: 0; }
+.ow-topbar > div:first-child > strong { color: #1a1c1f; font-size: 12px; font-weight: 500; max-width: min(44vw, 560px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ow-topbar-session { align-items: center; color: rgba(26,28,31,.46); display: flex; font-size: 9px; gap: 5px; }
+.ow-topbar-session i { background: #20a56a; border-radius: 50%; height: 5px; width: 5px; }
+.ow-panel-controls { align-items: center; border: 1px solid rgba(26,28,31,.08); border-radius: 7px; display: flex; overflow: hidden; }
+.ow-panel-controls button { border-radius: 0; height: 25px; width: 27px; }
+.ow-panel-controls button + button { border-left: 1px solid rgba(26,28,31,.08); }
+.ow-panel-controls button svg { height: 13px; width: 13px; }
+.ow-pane-actions { align-items: center; display: flex; gap: 6px; }
+.ow-pane-actions > button,
+.ow-empty-workflow > header > button { align-items: center; background: transparent; border: 0; border-radius: 6px; color: rgba(26,28,31,.48); cursor: pointer; display: flex; height: 25px; justify-content: center; padding: 0; width: 25px; }
+.ow-pane-actions > button:hover,
+.ow-empty-workflow > header > button:hover { background: rgba(26,28,31,.06); color: #1a1c1f; }
+.ow-pane-actions > button svg,
+.ow-empty-workflow > header > button svg { height: 13px; width: 13px; }
+.ow-title-with-back { align-items: flex-start; display: flex; gap: 9px; min-width: 0; }
+.ow-back-button { align-items: center; background: transparent; border: 0; border-radius: 6px; color: rgba(26,28,31,.58); cursor: pointer; display: flex; flex: 0 0 auto; height: 27px; justify-content: center; margin-left: -7px; padding: 0; width: 27px; }
+.ow-back-button:hover { background: rgba(26,28,31,.06); color: #1a1c1f; }
+.ow-back-button svg { height: 14px; width: 14px; }
+.ow-session-title { align-items: center; }
+.ow-session-title h1 { max-width: min(60vw, 620px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ow-new-task-page { align-items: center; display: flex; justify-content: center; padding-bottom: 90px; }
+.ow-new-task-empty { margin: auto; max-width: 720px; text-align: center; width: 100%; }
+.ow-new-task-mark { align-items: center; background: #f2f2f2; border: 1px solid rgba(26,28,31,.07); border-radius: 12px; display: flex; height: 42px; justify-content: center; margin: 0 auto 17px; width: 42px; }
+.ow-new-task-mark svg { height: 20px; width: 20px; }
+.ow-new-task-empty > h1 { font-size: 22px; font-weight: 600; letter-spacing: -.035em; margin: 0; }
+.ow-new-task-empty > p { color: rgba(26,28,31,.5); font-size: 12px; line-height: 1.55; margin: 8px auto 22px; max-width: 540px; }
+.ow-new-task-composer { margin-bottom: 12px; text-align: left; }
+.ow-new-task-composer textarea { min-height: 92px; }
+.ow-task-suggestions { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+.ow-task-suggestions button { background: #fff; border: 1px solid rgba(26,28,31,.09); border-radius: 8px; color: rgba(26,28,31,.6); cursor: pointer; font-size: 9px; padding: 7px 9px; }
+.ow-task-suggestions button:hover { background: #f7f7f7; border-color: rgba(26,28,31,.16); color: #1a1c1f; }
+.ow-session-page { padding-top: 24px; }
+.ow-machine-work-card { margin-bottom: 13px; }
+.ow-working-status { align-items: center; background: #fafafa; border-top: 1px solid rgba(26,28,31,.07); display: grid; gap: 10px; grid-template-columns: 30px minmax(0,1fr) auto; min-height: 72px; padding: 10px 12px; }
+.ow-working-pulse { align-items: center; background: #edf8f2; border-radius: 50%; color: #14734b; display: flex; height: 30px; justify-content: center; position: relative; width: 30px; }
+.ow-working-pulse.is-live { background: #eef6ff; color: #0285ff; }
+.ow-working-pulse.is-live::after { animation: ow-status-pulse 1.8s ease-out infinite; border: 1px solid rgba(2,133,255,.35); border-radius: 50%; content: ""; inset: -1px; position: absolute; }
+.ow-working-pulse svg { height: 13px; width: 13px; }
+@keyframes ow-status-pulse { 0% { opacity: .8; transform: scale(1); } 100% { opacity: 0; transform: scale(1.5); } }
+.ow-working-status > div { display: grid; gap: 2px; min-width: 0; }
+.ow-working-status > div small { color: rgba(26,28,31,.42); font-size: 8px; }
+.ow-working-status > div strong { font-size: 11px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ow-working-status > div span { color: rgba(26,28,31,.45); font-size: 8px; }
+.ow-working-status > .ow-binary { font-size: 9px; }
+.ow-frame-proof { display: grid; gap: 3px; text-align: right; }
+.ow-frame-proof span { color: rgba(26,28,31,.43); font-size: 9px; }
+.ow-frame-proof strong { font-size: 10px !important; font-weight: 500 !important; }
+.ow-machine-activity { border: 1px solid rgba(26,28,31,.09); border-radius: 11px; margin: 0 auto 13px; max-width: 820px; overflow: hidden; }
+.ow-machine-activity > header { align-items: center; display: grid; gap: 10px; grid-template-columns: 38px minmax(0,1fr) auto; min-height: 66px; padding: 10px 12px; }
+.ow-machine-activity > header > div:nth-child(2) { display: grid; gap: 1px; }
+.ow-machine-activity > header > div:nth-child(2) > span { color: #0285ff; font-size: 8px; font-weight: 500; }
+.ow-machine-activity h2 { font-size: 11px; font-weight: 600; margin: 0; }
+.ow-machine-activity p { color: rgba(26,28,31,.43); font-size: 8px; margin: 0; }
+.ow-machine-activity > header > button { background: transparent; border: 0; color: #0285ff; cursor: pointer; font-size: 9px; }
+.ow-activity-steps { align-items: center; background: #fafafa; border-top: 1px solid rgba(26,28,31,.07); display: grid; grid-template-columns: auto 1fr auto 1fr auto; min-height: 42px; padding: 8px 12px; }
+.ow-activity-steps > span { align-items: center; color: rgba(26,28,31,.4); display: flex; font-size: 8px; gap: 4px; white-space: nowrap; }
+.ow-activity-steps > span svg { height: 10px; width: 10px; }
+.ow-activity-steps > span.is-complete { color: #14734b; }
+.ow-activity-steps > span.is-live { color: #0285ff; }
+.ow-activity-steps > i { border-top: 1px solid rgba(26,28,31,.13); margin: 0 8px; }
+.ow-session-row { align-items: center; background: #fff; border: 0; border-top: 1px solid rgba(26,28,31,.07); color: #1a1c1f; cursor: pointer; display: grid; gap: 10px; grid-template-columns: 25px 1fr auto; min-height: 52px; padding: 7px 14px; text-align: left; width: 100%; }
+.ow-session-row:hover { background: #fafafa; }
+.ow-session-row > span:nth-child(2) { display: grid; gap: 2px; }
+.ow-session-row strong { font-size: 11px; font-weight: 500; }
+.ow-session-row small, .ow-session-row time { color: rgba(26,28,31,.43); font-size: 9px; }
+.ow-session-composer { background: #f7f7f7; border: 1px solid rgba(26,28,31,.1); border-radius: 14px; margin: 16px auto 0; max-width: 820px; padding: 8px; }
+.ow-session-composer textarea { background: transparent !important; border: 0 !important; box-shadow: none !important; font-size: 11px; min-height: 54px; padding: 5px 6px !important; resize: none; }
+.ow-session-composer footer { align-items: center; display: flex; justify-content: space-between; padding-left: 6px; }
+.ow-session-composer footer > span { color: rgba(26,28,31,.43); font-size: 8px; }
+.ow-session-composer footer button { background: #1a1c1f; border-radius: 50%; color: #fff; height: 28px; min-width: 28px; width: 28px; }
+.ow-session-composer footer button svg { height: 13px; width: 13px; }
+.ow-machine-detail-hero { border: 1px solid rgba(26,28,31,.1); border-radius: 12px; display: grid; grid-template-columns: minmax(0,1.4fr) minmax(220px,.8fr); margin: 0 auto 13px; max-width: 820px; overflow: hidden; }
+.ow-machine-detail-hero .ow-three-preview.is-large { height: 330px; }
+.ow-machine-detail-hero > div:last-child { border-left: 1px solid rgba(26,28,31,.08); padding: 22px 18px; }
+.ow-machine-detail-hero > div:last-child > h2 { font-size: 14px; font-weight: 600; letter-spacing: -.02em; margin: 13px 0 5px; }
+.ow-machine-detail-hero > div:last-child > p { color: rgba(26,28,31,.48); font-size: 9px; line-height: 1.5; margin: 0 0 14px; }
+.ow-machine-detail-hero dl { margin: 0; }
+.ow-machine-detail-hero dl > div { align-items: center; border-bottom: 1px solid rgba(26,28,31,.07); display: flex; justify-content: space-between; min-height: 34px; }
+.ow-machine-detail-hero dt, .ow-machine-detail-hero dd { font-size: 8px; margin: 0; }
+.ow-machine-detail-hero dt { color: rgba(26,28,31,.43); }
+.ow-machine-detail-hero dd { color: rgba(26,28,31,.7); }
+.ow-machine-detail-hero dd.is-success { color: #14734b; }
+.ow-empty-workflow > div { align-items: center; color: rgba(26,28,31,.42); display: flex; flex: 1; flex-direction: column; justify-content: center; padding: 28px; text-align: center; }
+.ow-empty-workflow > div > svg { height: 24px; margin-bottom: 12px; width: 24px; }
+.ow-empty-workflow h3 { color: #1a1c1f; font-size: 12px; font-weight: 600; margin: 0; }
+.ow-empty-workflow > div > p { font-size: 9px; line-height: 1.5; margin: 5px 0 0; max-width: 230px; }
+
+@media (max-width: 900px) {
+  .ow-working-status { grid-template-columns: 30px minmax(0,1fr); }
+  .ow-working-status > .ow-binary { display: none; }
+  .ow-machine-detail-hero { grid-template-columns: 1fr; }
+  .ow-machine-detail-hero > div:last-child { border-left: 0; border-top: 1px solid rgba(26,28,31,.08); }
+  .ow-activity-steps { gap: 6px; grid-template-columns: 1fr; }
+  .ow-activity-steps > i { display: none; }
+}
