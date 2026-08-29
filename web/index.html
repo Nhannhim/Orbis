@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Orbis physical AI orchestration operator console">
+    <title>Orbis — Physical AI Orchestrator</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="/" aria-label="Orbis home">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span>ORBIS</span>
+      </a>
+      <div class="connection"><span class="status-dot"></span>Local orchestrator</div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div>
+          <p class="eyebrow">WAREHOUSE / DOCK 4</p>
+          <h1>Physical work, coordinated.</h1>
+          <p class="hero-copy">A proof-grounded handoff from packing cell to autonomous transport to vehicle loading.</p>
+        </div>
+        <form id="run-form" class="run-panel">
+          <div class="field-grid">
+            <label>Order<input id="order-id" name="order_id" value="ORD-1042" required></label>
+            <label>Package<input id="package-id" name="package_id" value="PKG-1042" required></label>
+          </div>
+          <label>Destination<input id="destination" name="destination" value="Oakland Distribution Center" required></label>
+          <label class="fault-control">
+            <input id="inject-failure" type="checkbox">
+            Simulate a loading vision failure
+          </label>
+          <button id="run-button" type="submit">Run fulfillment</button>
+          <p id="form-error" class="form-error" role="alert"></p>
+        </form>
+      </section>
+
+      <section aria-labelledby="agents-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">EDGE FLEET</p>
+            <h2 id="agents-title">Physical agents</h2>
+          </div>
+          <p>Local control. Shared intent.</p>
+        </div>
+        <div id="agent-grid" class="agent-grid" aria-live="polite"></div>
+      </section>
+
+      <section id="workflow-section" class="workflow-section" aria-labelledby="workflow-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">ACTIVE OBJECTIVE</p>
+            <h2 id="workflow-title">No workflow running</h2>
+          </div>
+          <div id="workflow-status" class="status-chip">READY</div>
+        </div>
+
+        <div class="workspace-grid">
+          <div class="workflow-board">
+            <div id="package-state" class="package-state empty-state">Run a fulfillment workflow to create a tracked physical object.</div>
+            <ol id="step-list" class="step-list"></ol>
+            <div id="recovery-panel" class="recovery-panel" hidden>
+              <div>
+                <strong>Verification stopped the workflow</strong>
+                <p>The physical outcome could not be proven. Inspect the evidence, then retry.</p>
+              </div>
+              <button id="retry-button" type="button">Retry failed step</button>
+            </div>
+          </div>
+
+          <aside class="event-panel" aria-labelledby="events-title">
+            <div class="event-heading">
+              <h3 id="events-title">Custody &amp; evidence log</h3>
+              <span id="event-count">0 events</span>
+            </div>
+            <ol id="event-list" class="event-list">
+              <li class="empty-event">Verified events will appear here.</li>
+            </ol>
+          </aside>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <span>ORBIS 0.1</span>
+      <span>Goals above actuators · Evidence before handoff</span>
+    </footer>
+    <script src="/app.js" defer></script>
+  </body>
+</html>
+
