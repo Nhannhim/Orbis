@@ -293,7 +293,7 @@ export function OrbisWorkspace({ displayName, demo = false }: { displayName: str
       <aside className="orbis-status-panel" aria-label="Live status and workflow">
         <header><div><span>Live control</span><strong>Status and workflow</strong></div><span className="orbis-live-pill"><i /> Live</span></header>
         <section className="orbis-live-view">
-          <div className="orbis-live-meta"><span><Wifi /> {selectedAgent.location}</span><time>{nowTime()}</time></div>
+          <div className="orbis-live-meta"><span><Wifi /> {selectedAgent.location}</span><time>Live feed</time></div>
           <div className="orbis-camera-surface">
             <span className="scan-corner scan-corner--one" /><span className="scan-corner scan-corner--two" /><ScanLine className="orbis-scan-line" />
             {selectedAgent.id === 'packing' ? <Bot /> : selectedAgent.id === 'amr' ? <Truck /> : <Warehouse />}
