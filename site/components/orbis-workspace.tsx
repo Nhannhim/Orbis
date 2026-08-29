@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { MachineThreePreview } from '@/components/machine-three-preview';
 import { OrbisMark } from '@/components/orbis-mark';
+import { OutcomeExperience, OutcomeWorkflowPanel } from '@/components/outcomes';
 import { Button } from '@/components/ui/button';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { Textarea } from '@/components/ui/textarea';
@@ -30,6 +31,17 @@ import {
   type VisionScenario,
   type WorkflowView,
 } from '@/lib/orbis-api';
+import {
+  approveOutcomePlan,
+  createOutcomePlan,
+  getOutcome,
+  performOutcomeAction,
+  startOutcome,
+  type OutcomeActionKind,
+  type OutcomePlanView,
+  type OutcomeTaskView,
+  type OutcomeView,
+} from '@/lib/outcome-api';
 
 type ViewId = 'orchestrator' | 'connections' | 'tasks' | 'space';
 type MachineId = 'packing' | 'amr' | 'loading';
@@ -344,6 +356,9 @@ export function OrbisWorkspace({ displayName, demo = false }: { displayName: str
   const [visionMode, setVisionMode] = useState<'openai' | 'fixture'>('fixture');
   const [pollIntervalMs, setPollIntervalMs] = useState(750);
   const [workflow, setWorkflow] = useState<WorkflowView | null>(null);
+  const [outcomePlan, setOutcomePlan] = useState<OutcomePlanView | null>(null);
+  const [outcome, setOutcome] = useState<OutcomeView | null>(null);
+  const [selectedOutcomeTaskId, setSelectedOutcomeTaskId] = useState<string>();
   const [apiStatus, setApiStatus] = useState<'checking' | 'online' | 'offline'>('checking');
   const [apiError, setApiError] = useState<string | null>(null);
   const [actionPending, setActionPending] = useState(false);
@@ -356,7 +371,9 @@ export function OrbisWorkspace({ displayName, demo = false }: { displayName: str
   const processMachine = machines[selectedProcess.machineId];
   const selectedMachine = activeView === 'orchestrator' ? processMachine : machines[selectedMachineId];
   const selectedStatus = statuses[selectedProcess.id];
-  const isRunning = actionPending || ['pending', 'inspecting', 'ready_for_routing', 'routing', 'running'].includes(workflow?.status ?? '');
+  const isRunning = actionPending
+    || ['pending', 'inspecting', 'ready_for_routing', 'routing', 'running'].includes(workflow?.status ?? '')
+    || ['executing', 'cleaning_up'].includes(outcome?.status ?? '');
   const machineIsWorking = selectedStatus === 'running';
   const vision = workflow?.vision ?? emptyVision;
   const routingCandidates = workflow?.routing.candidates.length ? workflow.routing.candidates : fallbackRoutingCandidates;
@@ -404,6 +421,29 @@ export function OrbisWorkspace({ displayName, demo = false }: { displayName: str
     };
   }, [pollIntervalMs, workflow?.id, workflow?.status]);
 
+  useEffect(() => {
+    if (!outcome?.id || ['completed', 'cancelled'].includes(outcome.status)) return;
+    let cancelled = false;
+    const refresh = async () => {
+      try {
+        const next = await getOutcome(outcome.id);
+        if (cancelled) return;
+        setOutcome(next);
+        setApiStatus('online');
+        setApiError(null);
+      } catch (error) {
+        if (cancelled) return;
+        setApiStatus(connectionStatusFor(error));
+        setApiError(error instanceof Error ? error.message : 'Unable to refresh the dinner outcome.');
+      }
+    };
+    const interval = window.setInterval(() => { void refresh(); }, pollIntervalMs);
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+    };
+  }, [outcome?.id, outcome?.status, pollIntervalMs]);
+
   function navigate(view: ViewId) {
     setActiveView(view);
     setShowScanner(false);
@@ -419,6 +459,9 @@ export function OrbisWorkspace({ displayName, demo = false }: { displayName: str
     setObjective(taskScenarios.warehouse.objective);
     setFollowUp('');
     setWorkflow(null);
+    setOutcomePlan(null);
+    setOutcome(null);
+    setSelectedOutcomeTaskId(undefined);
     setApiError(null);
     setWorkflowOpen(false);
   }
@@ -427,6 +470,8 @@ export function OrbisWorkspace({ displayName, demo = false }: { displayName: str
     setTaskScenarioId(nextScenarioId);
     setObjective(taskScenarios[nextScenarioId].objective);
     setApiError(null);
+    setOutcomePlan(null);
+    setOutcome(null);
   }
 
   function selectProcess(processId: ProcessId) {
@@ -481,8 +526,19 @@ export function OrbisWorkspace({ displayName, demo = false }: { displayName: str
     setWorkflowOpen(true);
     setActionPending(true);
     setApiError(null);
-    setRecentTasks((items) => [{ title: generatedTitle, meta: 'Warehouse 01 · Just now', icon: Warehouse }, ...items.filter((item) => item.title !== generatedTitle)].slice(0, 6));
+    setRecentTasks((items) => [{ title: generatedTitle, meta: `${taskScenarioId === 'home' ? 'Home' : 'Warehouse 01'} · Just now`, icon: taskScenarioId === 'home' ? House : Warehouse }, ...items.filter((item) => item.title !== generatedTitle)].slice(0, 6));
     try {
+      if (taskScenarioId === 'home') {
+        const plan = await createOutcomePlan({
+          objective: taskObjective,
+          details: { guest_count: 12, ready_time: '7:00 PM', dietary: ['vegetarian'] },
+        });
+        setOutcomePlan(plan);
+        setOutcome(null);
+        setSessionTitle(plan.title);
+        setApiStatus('online');
+        return;
+      }
       const created = await createWorkflow({ objective: taskObjective, scenarioId, visionMode });
       if (!created.id) throw new Error('The backend created a workflow without an ID.');
       setWorkflow(created);
@@ -495,6 +551,56 @@ export function OrbisWorkspace({ displayName, demo = false }: { displayName: str
     } finally {
       setActionPending(false);
     }
+  }
+
+  async function approveAndStartOutcome() {
+    if (!outcomePlan?.id || actionPending) return;
+    setActionPending(true);
+    setApiError(null);
+    try {
+      const approved = await approveOutcomePlan(outcomePlan.id);
+      setOutcome(approved);
+      const started = await startOutcome(approved.id);
+      setOutcome(started);
+      setApiStatus('online');
+    } catch (error) {
+      setApiStatus(connectionStatusFor(error));
+      setApiError(error instanceof Error ? error.message : 'Unable to approve and start this dinner plan.');
+    } finally {
+      setActionPending(false);
+    }
+  }
+
+  async function runOutcomeAction(action: OutcomeActionKind) {
+    if (!outcome?.id || actionPending) return;
+    setActionPending(true);
+    setApiError(null);
+    try {
+      const next = await performOutcomeAction(outcome.id, {
+        action,
+        taskId: selectedOutcomeTaskId,
+        notes: action === 'submit_vision_review' ? 'Package was repackaged and cleared by the demo inspector.' : undefined,
+        payload: action === 'submit_vision_review' ? { disposition: 'repackaged_and_cleared' } : undefined,
+      });
+      setOutcome(next);
+      setApiStatus('online');
+    } catch (error) {
+      setApiStatus(connectionStatusFor(error));
+      setApiError(error instanceof Error ? error.message : 'Unable to apply this outcome action.');
+    } finally {
+      setActionPending(false);
+    }
+  }
+
+  function selectOutcomeTask(task: OutcomeTaskView) {
+    setSelectedOutcomeTaskId(task.id);
+  }
+
+  function backToOutcomeRequest() {
+    setTaskMode('new');
+    setOutcomePlan(null);
+    setOutcome(null);
+    setWorkflowOpen(false);
   }
 
   async function reviewVision(disposition: ReviewDisposition) {
@@ -572,14 +678,29 @@ export function OrbisWorkspace({ displayName, demo = false }: { displayName: str
         <section className="ow-prompt-card ow-new-task-composer">
           <Textarea aria-label="New task objective" placeholder="Ask Orbis to coordinate an outcome…" value={objective} onChange={(event) => setObjective(event.target.value)} disabled={isRunning} />
           {taskScenarioId === 'warehouse' && <ScenarioControls scenarios={scenarios} selectedId={scenarioId} onSelect={setScenarioId} mode={visionMode} onModeChange={setVisionMode} disabled={isRunning} />}
-          {taskScenarioId === 'home' && <div className="ow-home-scenario-note"><House /><span><strong>Five coordinated Home workers</strong><small>Roomba · Humanoid cook · Loader robot · Furniture robot · Lamp agent</small><small>The dinner workflow is the next scenario to connect to the coordinator.</small></span></div>}
+          {taskScenarioId === 'home' && <div className="ow-home-scenario-note"><House /><span><strong>Five coordinated Home workers</strong><small>Roomba · Humanoid cook · Loader robot · Furniture robot · Lamp agent</small><small>Orbis will create a reviewable plan before ordering or starting physical work.</small></span></div>}
           {apiError && <div className="ow-api-error is-compact"><AlertTriangle /><span><strong>Backend offline</strong><small>{apiError}</small></span><button type="button" onClick={retryCurrentWorkflow} disabled={actionPending}><RefreshCw /> Retry</button></div>}
-          <footer><span><Sparkles /> {taskScenarioId === 'warehouse' ? 'First-instance warehouse execution' : 'Home scenario preview'}</span><Button size="icon" aria-label={taskScenarioId === 'warehouse' ? 'Start warehouse task' : 'Home workflow is not connected yet'} onClick={runObjective} disabled={taskScenarioId === 'home' || isRunning || !objective.trim()}>{isRunning ? <Activity className="spin-soft" /> : <ArrowUp />}</Button></footer>
+          <footer><span><Sparkles /> {taskScenarioId === 'warehouse' ? 'First-instance warehouse execution' : 'Plan, approve, then coordinate the complete dinner outcome'}</span><Button size="icon" aria-label={taskScenarioId === 'warehouse' ? 'Start warehouse task' : 'Create Home dinner plan'} onClick={runObjective} disabled={isRunning || !objective.trim()}>{isRunning ? <Activity className="spin-soft" /> : <ArrowUp />}</Button></footer>
         </section>
       </section>
     </div>}
 
-    {activeView === 'orchestrator' && taskMode === 'session' && <div className="ow-detail-scroll ow-session-page">
+    {activeView === 'orchestrator' && taskMode === 'session' && (outcomePlan || outcome) && <div className="ow-detail-scroll ow-session-page">
+      {apiError && <div className="ow-api-error is-compact"><AlertTriangle /><span><strong>Outcome update failed</strong><small>{apiError}</small></span></div>}
+      <OutcomeExperience
+        plan={outcomePlan}
+        outcome={outcome}
+        busy={actionPending}
+        selectedTaskId={selectedOutcomeTaskId}
+        onBack={backToOutcomeRequest}
+        onApprovePlan={approveAndStartOutcome}
+        onAction={runOutcomeAction}
+        onSelectTask={selectOutcomeTask}
+        onRepeat={startNewTask}
+      />
+    </div>}
+
+    {activeView === 'orchestrator' && taskMode === 'session' && !outcomePlan && !outcome && <div className="ow-detail-scroll ow-session-page">
       <header className="ow-page-title ow-session-title">
         <div className="ow-title-with-back">{sessionReturn && <button className="ow-back-button" type="button" aria-label="Go back" onClick={backFromSession}><ArrowLeft /></button>}<div><h1>{sessionTitle}</h1><p>Task session · Warehouse 01 · {workflow ? displayToken(workflow.status) : 'Ready to run'}</p></div></div>
         <button type="button" aria-label="Session actions"><MoreHorizontal /></button>
@@ -649,7 +770,15 @@ export function OrbisWorkspace({ displayName, demo = false }: { displayName: str
     </div>}
   </section>;
 
-  const workflowContent = activeView === 'orchestrator' && taskMode === 'session' ? <aside className="ow-workflow-pane">
+  const workflowContent = activeView === 'orchestrator' && taskMode === 'session' && outcome ? <OutcomeWorkflowPanel
+    outcome={outcome}
+    selectedTaskId={selectedOutcomeTaskId}
+    onSelectTask={selectOutcomeTask}
+    onClose={() => setWorkflowOpen(false)}
+  /> : activeView === 'orchestrator' && taskMode === 'session' && outcomePlan ? <aside className="ow-workflow-pane ow-empty-workflow">
+    <header><div><h2>Workflow</h2><p>{outcomePlan.id} · Plan review</p></div><button type="button" aria-label="Close workflow panel" onClick={() => setWorkflowOpen(false)}><PanelRightClose /></button></header>
+    <div><Waypoints /><h3>Approval is the first gate</h3><p>Approve the order and execution plan to create the Warehouse, Delivery, and Home workflow graph.</p></div>
+  </aside> : activeView === 'orchestrator' && taskMode === 'session' ? <aside className="ow-workflow-pane">
     <header><div><h2>Workflow</h2><p>{workflow?.id ?? 'Not started'} · {sessionTitle}</p></div><div className="ow-pane-actions"><span className={`ow-live-status ${apiStatus === 'offline' ? 'is-offline' : ''}`}><i /> {apiStatus === 'offline' ? 'Offline' : 'Backend live'}</span><button type="button" aria-label="Close workflow panel" onClick={() => setWorkflowOpen(false)}><PanelRightClose /></button></div></header>
     <div className="ow-workflow-summary"><span>Vision {visionStateLabel(vision.state).toLowerCase()}</span><span>{workflow?.steps.length ?? 3} physical steps</span><span>{workflow ? `${workflow.progress}%` : 'Not started'}</span></div>
     <FlowGraph statuses={statuses} selectedProcessId={selectedProcessId} onSelect={selectProcess} />
