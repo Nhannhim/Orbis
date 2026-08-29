@@ -1200,3 +1200,325 @@
   .orbis-space-inspector { display: block; }
   .orbis-space-inspector dl { margin-top: 14px; }
 }
+
+/* Codex product language — final cascade */
+.orbis-app {
+  --cx-surface: #181818;
+  --cx-surface-under: #000;
+  --cx-surface-secondary: #212121;
+  --cx-control: #282828;
+  --cx-text: #dfdfdf;
+  --cx-text-secondary: rgba(255,255,255,.70);
+  --cx-text-tertiary: rgba(255,255,255,.50);
+  --cx-border: rgba(255,255,255,.08);
+  --cx-border-light: rgba(255,255,255,.04);
+  --cx-border-strong: rgba(255,255,255,.16);
+  --cx-blue: #339cff;
+  --cx-green: #77c79a;
+  --cx-red: #ff8583;
+  --cx-radius-sm: 6px;
+  --cx-radius-md: 8px;
+  --cx-radius-lg: 10px;
+  --cx-radius-xl: 12px;
+  background: var(--cx-surface-under);
+  color: var(--cx-text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 14px;
+  grid-template-columns: 56px minmax(600px,1fr) 360px;
+  letter-spacing: 0;
+}
+.orbis-app button, .orbis-app input { font-family: inherit; }
+.orbis-app button { transition: background-color .15s ease, border-color .15s ease, color .15s ease, opacity .15s ease; }
+.orbis-rail { background: var(--cx-surface-under); border-right: 0; padding: 10px 0; width: 56px; }
+.orbis-rail-logo { height: 34px; margin-bottom: 18px; width: 36px; }
+.orbis-rail-logo .orbis-mark { transform: scale(.68); }
+.orbis-rail-logo .orbis-mark::after { background: var(--cx-text); }
+.orbis-rail nav, .orbis-rail-bottom { gap: 4px; }
+.orbis-nav-button { border: 0; border-radius: var(--cx-radius-md); color: var(--cx-text-tertiary); height: 32px; width: 32px; }
+.orbis-nav-button svg { height: 16px; stroke-width: 1.7; width: 16px; }
+.orbis-nav-button:hover { background: rgba(255,255,255,.06); color: var(--cx-text); }
+.orbis-nav-button:hover::after { background: var(--cx-control); border: 1px solid var(--cx-border); border-radius: var(--cx-radius-sm); box-shadow: 0 4px 8px -2px rgba(0,0,0,.35); color: var(--cx-text); font-family: inherit; font-size: 12px; font-weight: 500; left: 40px; letter-spacing: 0; padding: 6px 8px; }
+.orbis-nav-button.is-active { background: rgba(255,255,255,.08); border-color: transparent; color: var(--cx-text); }
+.orbis-nav-button.is-active::before { display: none; }
+.orbis-user-avatar { background: var(--cx-text); color: #0d0d0d; font-size: 11px; height: 26px; margin-top: 6px; width: 26px; }
+.orbis-detail-panel { background: var(--cx-surface); border-radius: var(--cx-radius-xl) 0 0 var(--cx-radius-xl); min-height: 100vh; overflow: clip; }
+.orbis-topbar { background: var(--cx-surface); border-color: var(--cx-border); height: 48px; padding: 0 18px; }
+.orbis-breadcrumb { color: var(--cx-text-tertiary); font-size: 12px; gap: 7px; }
+.orbis-breadcrumb strong { color: var(--cx-text); font-weight: 500; }
+.orbis-breadcrumb a { border-radius: var(--cx-radius-sm); height: 28px; justify-content: center; margin-left: -6px; margin-right: 2px; width: 28px; }
+.orbis-breadcrumb a:hover { background: rgba(255,255,255,.06); }
+.orbis-breadcrumb a svg, .orbis-breadcrumb > svg { height: 14px; width: 14px; }
+.orbis-breadcrumb i { color: var(--cx-text-tertiary); }
+.orbis-topbar-tools { gap: 8px; }
+.orbis-demo-badge { background: rgba(255,255,255,.05); border: 1px solid var(--cx-border); border-radius: var(--cx-radius-sm); color: var(--cx-text-secondary); font-family: inherit; font-size: 11px; letter-spacing: 0; padding: 4px 7px; }
+.orbis-search { background: transparent; border: 0; border-radius: var(--cx-radius-md); color: var(--cx-text-tertiary); font-size: 12px; gap: 6px; height: 30px; padding: 0 7px; }
+.orbis-search:hover { background: rgba(255,255,255,.06); color: var(--cx-text); }
+.orbis-search kbd { background: rgba(255,255,255,.06); border: 1px solid var(--cx-border); border-radius: 4px; color: var(--cx-text-tertiary); font-family: inherit; font-size: 10px; margin-left: 3px; padding: 1px 4px; }
+.orbis-online { color: var(--cx-text-secondary); font-family: inherit; font-size: 12px; gap: 6px; letter-spacing: 0; text-transform: none; }
+.orbis-online i, .orbis-live-pill i { background: var(--cx-green); box-shadow: none; height: 6px; width: 6px; }
+.orbis-page { max-width: 1120px; padding: 28px clamp(24px,3vw,36px) 52px; }
+.orbis-page-heading { align-items: center; margin-bottom: 24px; }
+.orbis-page-heading p, .orbis-section-heading > div > span, .orbis-status-heading > span { color: var(--cx-text-tertiary); font-family: inherit; font-size: 12px; font-weight: 400; letter-spacing: 0; margin: 0 0 4px; text-transform: none; }
+.orbis-page-heading h1 { font-size: 24px; font-weight: 600; letter-spacing: -.02em; line-height: 1.25; margin: 0; }
+.orbis-page-heading > div > span { color: var(--cx-text-secondary); font-size: 13px; margin-top: 5px; }
+.orbis-page-heading > .h-9 { background: transparent; border-color: var(--cx-border-strong); border-radius: var(--cx-radius-md); color: var(--cx-text); font-size: 13px; font-weight: 500; height: 32px; padding: 0 10px; }
+.orbis-page-heading > .h-9:hover { background: rgba(255,255,255,.06); }
+.orbis-command-card { background: var(--cx-surface-secondary); border: 1px solid var(--cx-border); border-radius: 16px; box-shadow: 0 1px 2px rgba(0,0,0,.2); gap: 10px; grid-template-columns: 32px minmax(0,1fr) auto; margin-bottom: 16px; padding: 10px 10px 10px 12px; }
+.orbis-command-icon { background: transparent; border-radius: var(--cx-radius-md); color: var(--cx-text-secondary); height: 32px; width: 32px; }
+.orbis-command-icon svg { height: 17px; stroke-width: 1.7; width: 17px; }
+.orbis-command-card label { color: var(--cx-text-tertiary); font-family: inherit; font-size: 11px; font-weight: 400; letter-spacing: 0; margin: 0 0 1px 3px; text-transform: none; }
+.orbis-command-card input { color: var(--cx-text); font-size: 14px; height: 28px; }
+.orbis-command-card > .h-9 { background: #f2f2f2; border-radius: var(--cx-radius-md); color: #0d0d0d; font-size: 13px; font-weight: 500; height: 34px; padding: 0 12px; }
+.orbis-command-card > .h-9:hover { background: #dfdfdf; }
+.orbis-parallel-card, .orbis-activity-card { background: transparent; border: 1px solid var(--cx-border); border-radius: var(--cx-radius-xl); margin-bottom: 16px; }
+.orbis-section-heading { border-color: var(--cx-border); min-height: 56px; padding: 0 16px; }
+.orbis-section-heading h2, .orbis-status-heading strong { font-size: 14px; font-weight: 600; }
+.orbis-section-heading > svg { color: var(--cx-text-tertiary); height: 16px; width: 16px; }
+.orbis-run-pill { background: rgba(255,255,255,.04); border-color: var(--cx-border); border-radius: 999px; color: var(--cx-text-secondary); font-family: inherit; font-size: 11px; gap: 6px; padding: 4px 8px; text-transform: capitalize; }
+.orbis-run-pill i { height: 6px; width: 6px; }
+.orbis-run-pill.is-running, .orbis-run-pill.is-ready { color: var(--cx-blue); }
+.orbis-run-pill.is-completed { color: var(--cx-green); }
+.orbis-run-pill.is-attention { color: var(--cx-red); }
+.orbis-parallel-note { background: rgba(255,255,255,.025); border-color: var(--cx-border-light); color: var(--cx-text-tertiary); gap: 10px; padding: 12px 16px; }
+.orbis-parallel-note > svg { color: var(--cx-text-tertiary); height: 16px; width: 16px; }
+.orbis-parallel-note span { color: var(--cx-text-secondary); font-size: 12px; line-height: 1.45; }
+.orbis-parallel-note strong { color: var(--cx-text); font-size: 12px; font-weight: 500; }
+.orbis-agent-grid { gap: 8px; padding: 14px 14px 10px; }
+.orbis-agent-card { background: var(--cx-surface); border-color: var(--cx-border); border-radius: var(--cx-radius-lg); gap: 7px; grid-template-columns: 34px 1fr auto; padding: 12px; }
+.orbis-agent-card:hover { background: rgba(255,255,255,.025); border-color: var(--cx-border-strong); box-shadow: none; }
+.orbis-agent-card.is-selected { background: var(--cx-surface-secondary); border-color: var(--cx-border-strong); box-shadow: inset 2px 0 var(--cx-blue); }
+.orbis-agent-icon { background: rgba(255,255,255,.05); border-radius: var(--cx-radius-md); color: var(--cx-text-secondary); height: 32px; width: 32px; }
+.orbis-agent-icon svg { height: 16px; stroke-width: 1.6; width: 16px; }
+.orbis-agent-copy small { color: var(--cx-text-tertiary); font-family: inherit; font-size: 11px; }
+.orbis-agent-copy strong { color: var(--cx-text); font-size: 13px; font-weight: 500; margin-top: 2px; }
+.orbis-agent-copy em { color: var(--cx-text-secondary); font-size: 12px; margin-top: 5px; }
+.orbis-agent-state { color: var(--cx-text-tertiary); font-family: inherit; font-size: 11px; gap: 5px; text-transform: none; }
+.orbis-agent-state i { height: 6px; width: 6px; }
+.orbis-agent-card.is-executing .orbis-agent-state, .orbis-agent-card.is-verifying .orbis-agent-state { color: var(--cx-blue); }
+.orbis-agent-card.is-completed .orbis-agent-state { color: var(--cx-green); }
+.orbis-agent-card.is-waiting .orbis-agent-state { color: var(--cx-text-secondary); }
+.orbis-agent-card.is-issue .orbis-agent-state { color: var(--cx-red); }
+.orbis-progress { background: rgba(255,255,255,.08); height: 3px; }
+.orbis-progress i { background: var(--cx-blue); }
+.orbis-agent-metric { color: var(--cx-text-tertiary); font-family: inherit; font-size: 11px; }
+.orbis-handoff-row { grid-template-columns: 1fr 24px 1fr 24px 1fr; padding: 8px 14px 16px; }
+.orbis-handoff-row > div { gap: 2px 8px; grid-template-columns: 26px 1fr; }
+.orbis-handoff-row > div > span { background: var(--cx-surface-secondary); border-color: var(--cx-border-strong); color: var(--cx-text-tertiary); font-family: inherit; font-size: 11px; height: 24px; width: 24px; }
+.orbis-handoff-row > div > span.is-complete { background: rgba(119,199,154,.14); border-color: rgba(119,199,154,.25); color: var(--cx-green); }
+.orbis-handoff-row > div > span.is-current { background: rgba(51,156,255,.1); border-color: rgba(51,156,255,.3); color: var(--cx-blue); }
+.orbis-handoff-row strong { color: var(--cx-text); font-size: 12px; font-weight: 500; }
+.orbis-handoff-row small { color: var(--cx-text-tertiary); font-size: 11px; }
+.orbis-handoff-row > i { background: var(--cx-border-strong); }
+.orbis-activity-card ol { padding: 6px 16px 12px; }
+.orbis-activity-card li { border-color: var(--cx-border-light); gap: 10px; grid-template-columns: 6px 64px 150px 1fr; min-height: 42px; }
+.orbis-activity-card time, .orbis-activity-card li strong { color: var(--cx-text-tertiary); font-family: ui-monospace, "SFMono-Regular", Menlo, monospace; font-size: 11px; }
+.orbis-activity-card li strong { color: var(--cx-text-secondary); font-weight: 500; letter-spacing: 0; }
+.orbis-activity-card li span { color: var(--cx-text-secondary); font-size: 12px; }
+.orbis-activity-card li > i { background: var(--cx-text-tertiary); height: 6px; width: 6px; }
+.orbis-activity-card li > i.is-good { background: var(--cx-green); }
+.orbis-activity-card li > i.is-warn { background: var(--cx-red); }
+.orbis-status-panel { background: var(--cx-surface); border-color: var(--cx-border); color: var(--cx-text); }
+.orbis-status-panel > header { background: var(--cx-surface); border-color: var(--cx-border); height: 48px; padding: 0 16px; }
+.orbis-status-panel > header div span { color: var(--cx-text-tertiary); font-family: inherit; font-size: 11px; letter-spacing: 0; }
+.orbis-status-panel > header div strong { font-size: 13px; font-weight: 500; margin-top: 1px; }
+.orbis-live-pill { color: var(--cx-green); font-family: inherit; font-size: 11px; gap: 6px; text-transform: none; }
+.orbis-live-view, .orbis-validation, .orbis-workflow-status { border-color: var(--cx-border); padding: 16px; }
+.orbis-live-meta { color: var(--cx-text-tertiary); font-family: inherit; font-size: 11px; margin-bottom: 8px; }
+.orbis-camera-surface { background-color: #0d0d0d; background-image: linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px); background-size: 20px 20px; border-color: var(--cx-border); border-radius: var(--cx-radius-md); height: 170px; }
+.orbis-camera-surface > svg:not(.orbis-scan-line) { color: rgba(255,255,255,.42); stroke-width: 1.2; }
+.orbis-scan-line { color: rgba(51,156,255,.42); }
+.orbis-camera-surface > div { color: var(--cx-blue); font-family: inherit; font-size: 11px; text-transform: none; }
+.orbis-camera-surface > div i { background: var(--cx-blue); }
+.orbis-camera-surface > div strong { color: var(--cx-text-secondary); font-size: 11px; font-weight: 500; }
+.scan-corner { border-color: var(--cx-blue); opacity: .65; }
+.orbis-live-caption small { color: var(--cx-text-tertiary); font-family: inherit; font-size: 11px; letter-spacing: 0; text-transform: none; }
+.orbis-live-caption strong { color: var(--cx-text); font-size: 12px; font-weight: 500; max-width: 250px; }
+.orbis-live-caption em { color: var(--cx-blue); font-family: inherit; font-size: 12px; }
+.orbis-validation-score { margin-top: 16px; }
+.orbis-validation-score > strong { font-size: 28px; font-weight: 500; }
+.orbis-validation-score sup { color: var(--cx-text-tertiary); font-size: 11px; }
+.orbis-validation-score > span { background: rgba(255,255,255,.08); height: 4px; }
+.orbis-validation-score > span i { background: var(--cx-blue); }
+.orbis-validation p { color: var(--cx-text-tertiary); font-family: inherit; font-size: 11px; }
+.orbis-workflow-status ol { margin-top: 12px; }
+.orbis-workflow-status li { border-color: var(--cx-border-strong); gap: 10px; grid-template-columns: 26px 1fr; min-height: 58px; }
+.orbis-workflow-status li > span { background: var(--cx-surface-secondary); border-color: var(--cx-border-strong); color: var(--cx-text-tertiary); font-family: inherit; font-size: 11px; height: 24px; width: 24px; }
+.orbis-workflow-status li div strong { color: var(--cx-text); font-size: 12px; font-weight: 500; }
+.orbis-workflow-status li div small { color: var(--cx-text-tertiary); font-family: inherit; font-size: 11px; }
+.orbis-workflow-status li.is-focused { background: linear-gradient(90deg,rgba(51,156,255,.07),transparent); }
+.orbis-workflow-status li.is-focused > span { border-color: rgba(51,156,255,.35); color: var(--cx-blue); }
+.orbis-workflow-status li.is-completed > span { background: rgba(119,199,154,.14); border-color: rgba(119,199,154,.25); color: var(--cx-green); }
+.orbis-workflow-status li.is-issue > span { border-color: rgba(255,133,131,.35); color: var(--cx-red); }
+.orbis-autonomy-card { background: rgba(255,255,255,.025); border-color: var(--cx-border); border-radius: var(--cx-radius-lg); gap: 10px; margin: 14px 16px 10px; padding: 12px; }
+.orbis-autonomy-card > span { background: rgba(255,255,255,.06); border-radius: var(--cx-radius-sm); color: var(--cx-text-secondary); }
+.orbis-autonomy-card strong { color: var(--cx-text); font-size: 12px; font-weight: 500; }
+.orbis-autonomy-card p { color: var(--cx-text-tertiary); font-size: 11px; line-height: 1.45; }
+.orbis-fault-control { color: var(--cx-text-tertiary); font-size: 11px; gap: 8px; margin: 0 16px; }
+
+@media (max-width: 1220px) {
+  .orbis-app { grid-template-columns: 56px minmax(540px,1fr) 330px; }
+}
+@media (max-width: 960px) {
+  .orbis-app { grid-template-columns: 56px minmax(0,1fr); }
+  .orbis-detail-panel { border-radius: var(--cx-radius-xl) 0 0 0; }
+}
+@media (max-width: 680px) {
+  .orbis-app { padding-bottom: 56px; }
+  .orbis-rail { height: 56px; }
+  .orbis-page { padding: 24px 14px 36px; }
+}
+
+/* Codex destination surfaces */
+.orbis-app {
+  --background: var(--cx-surface);
+  --foreground: var(--cx-text);
+  --primary: #f2f2f2;
+  --primary-foreground: #0d0d0d;
+  --muted: rgba(255,255,255,.06);
+  --muted-foreground: var(--cx-text-secondary);
+  --border: var(--cx-border);
+  --input: var(--cx-border-strong);
+  --ring: rgba(51,156,255,.7);
+}
+.orbis-page-heading > .h-9.bg-primary { background: #f2f2f2; border: 0; border-radius: var(--cx-radius-md); color: #0d0d0d; font-size: 13px; font-weight: 500; height: 32px; padding: 0 10px; }
+.orbis-page-heading > .h-9.bg-primary:hover { background: #dfdfdf; }
+.orbis-qr-card { background: var(--cx-surface-secondary); border-color: var(--cx-border); border-radius: var(--cx-radius-xl); gap: 24px; grid-template-columns: 142px 1fr; margin-bottom: 16px; padding: 20px; }
+.orbis-qr-card > div:first-child { background: #f2f2f2; border-radius: var(--cx-radius-md); height: 136px; width: 136px; }
+.orbis-qr-visual { gap: 2px; grid-template-columns: repeat(9,8px); }
+.orbis-qr-visual i { background: #f2f2f2; height: 8px; width: 8px; }
+.orbis-qr-visual i.is-dark { background: #181818; }
+.orbis-qr-card > div:last-child > span { color: var(--cx-text-tertiary); font-family: inherit; font-size: 12px; letter-spacing: 0; }
+.orbis-qr-card h2 { color: var(--cx-text); font-size: 16px; font-weight: 600; letter-spacing: 0; margin: 8px 0 6px; }
+.orbis-qr-card p { color: var(--cx-text-secondary); font-size: 13px; line-height: 1.5; }
+.orbis-qr-card ol { gap: 10px 16px; margin-top: 14px; }
+.orbis-qr-card li { color: var(--cx-text-secondary); font-size: 12px; }
+.orbis-qr-card li svg { color: var(--cx-green); height: 12px; width: 12px; }
+.orbis-toolbar { background: var(--cx-surface-secondary); border-color: var(--cx-border); border-radius: var(--cx-radius-lg); margin-bottom: 16px; padding: 6px; }
+.orbis-toolbar > div svg { color: var(--cx-text-tertiary); height: 15px; width: 15px; }
+.orbis-toolbar input { color: var(--cx-text); font-size: 13px; height: 32px; }
+.orbis-toolbar > .h-8 { background: transparent; border-color: transparent; border-radius: var(--cx-radius-md); color: var(--cx-text-secondary); font-size: 12px; height: 30px; }
+.orbis-toolbar > .h-8:hover { background: rgba(255,255,255,.06); color: var(--cx-text); }
+.orbis-connection-grid { gap: 10px; }
+.orbis-connection-grid > article, .orbis-add-machine { background: transparent; border-color: var(--cx-border); border-radius: var(--cx-radius-xl); min-height: 220px; }
+.orbis-connection-grid > article.is-selected { border-color: var(--cx-border-strong); box-shadow: inset 2px 0 var(--cx-blue); }
+.orbis-connection-grid > article > button:first-child { padding: 16px 16px 14px; }
+.orbis-connection-icon { background: rgba(255,255,255,.05); border-radius: var(--cx-radius-md); color: var(--cx-text-secondary); height: 34px; width: 34px; }
+.orbis-connection-icon svg { height: 16px; stroke-width: 1.6; width: 16px; }
+.orbis-connection-state { color: var(--cx-green); font-family: inherit; font-size: 11px; gap: 6px; text-transform: none; }
+.orbis-connection-state i { background: var(--cx-green); height: 6px; width: 6px; }
+.orbis-connection-grid h2 { color: var(--cx-text); font-size: 14px; font-weight: 600; margin-top: 14px; }
+.orbis-connection-grid p { color: var(--cx-text-tertiary); font-family: inherit; font-size: 12px; margin-top: 3px; }
+.orbis-connection-grid dl { border-color: var(--cx-border); padding: 12px 16px; }
+.orbis-connection-grid dl div + div { border-color: var(--cx-border); }
+.orbis-connection-grid dt { color: var(--cx-text-tertiary); font-family: inherit; font-size: 11px; text-transform: none; }
+.orbis-connection-grid dd { color: var(--cx-text-secondary); font-size: 12px; margin-top: 3px; }
+.orbis-connection-grid footer { min-height: 40px; padding: 0 16px; }
+.orbis-connection-grid footer span { color: var(--cx-text-tertiary); font-size: 12px; }
+.orbis-connection-grid footer svg { height: 13px; width: 13px; }
+.orbis-connection-grid footer button { color: var(--cx-text-tertiary); font-size: 13px; }
+.orbis-add-machine { color: var(--cx-text-tertiary); }
+.orbis-add-machine:hover { background: rgba(255,255,255,.025); border-color: var(--cx-border-strong); }
+.orbis-add-machine span { border-color: var(--cx-border-strong); height: 36px; width: 36px; }
+.orbis-add-machine strong { color: var(--cx-text); font-size: 13px; font-weight: 500; margin-top: 12px; }
+.orbis-add-machine small { color: var(--cx-text-tertiary); font-size: 11px; margin-top: 4px; }
+
+.orbis-machine-health { background: rgba(255,255,255,.04); border-color: var(--cx-border); border-radius: 999px; color: var(--cx-blue); font-family: inherit; font-size: 12px; gap: 6px; padding: 5px 9px; text-transform: none; }
+.orbis-machine-health i { height: 6px; width: 6px; }
+.orbis-machine-health.is-completed { color: var(--cx-green); }
+.orbis-machine-health.is-issue { color: var(--cx-red); }
+.orbis-machine-tabs { gap: 8px; margin-bottom: 16px; }
+.orbis-machine-tabs button { background: transparent; border-color: var(--cx-border); border-radius: var(--cx-radius-lg); color: var(--cx-text-tertiary); gap: 9px; padding: 10px 12px; }
+.orbis-machine-tabs button:hover { background: rgba(255,255,255,.025); border-color: var(--cx-border-strong); }
+.orbis-machine-tabs button > svg { height: 16px; stroke-width: 1.6; width: 16px; }
+.orbis-machine-tabs button strong { color: var(--cx-text); font-size: 12px; font-weight: 500; }
+.orbis-machine-tabs button small { color: var(--cx-text-tertiary); font-size: 11px; }
+.orbis-machine-tabs button.is-active { background: var(--cx-surface-secondary); border-color: var(--cx-border-strong); color: var(--cx-blue); box-shadow: inset 2px 0 var(--cx-blue); }
+.orbis-machine-live { background: transparent; border-color: var(--cx-border); border-radius: var(--cx-radius-xl); margin-bottom: 12px; }
+.orbis-machine-camera { border-color: var(--cx-border); padding: 14px; }
+.orbis-machine-camera > header { margin-bottom: 10px; }
+.orbis-machine-camera > header > span { color: var(--cx-green); font-family: inherit; font-size: 11px; gap: 6px; }
+.orbis-machine-camera > header > span i { background: var(--cx-green); height: 6px; width: 6px; }
+.orbis-machine-camera > header button { background: transparent; border-color: transparent; border-radius: var(--cx-radius-md); color: var(--cx-text-tertiary); height: 28px; width: 28px; }
+.orbis-machine-camera > header button:hover { background: rgba(255,255,255,.06); color: var(--cx-text); }
+.orbis-machine-camera > header button svg { height: 14px; width: 14px; }
+.orbis-machine-live > aside { padding: 22px 18px; }
+.orbis-machine-live > aside > span { color: var(--cx-text-tertiary); font-family: inherit; font-size: 11px; letter-spacing: 0; }
+.orbis-machine-live > aside h2 { color: var(--cx-text); font-size: 16px; font-weight: 600; margin: 10px 0 7px; }
+.orbis-machine-live > aside p { color: var(--cx-text-secondary); font-size: 12px; }
+.orbis-machine-progress { margin: 20px 0; }
+.orbis-machine-progress > span { background: rgba(255,255,255,.08); }
+.orbis-machine-progress > span i { background: var(--cx-blue); }
+.orbis-machine-progress strong { color: var(--cx-blue); font-family: inherit; font-size: 12px; }
+.orbis-machine-live aside dl div { border-color: var(--cx-border); padding: 10px 0; }
+.orbis-machine-live aside dt, .orbis-machine-live aside dd { font-size: 12px; }
+.orbis-machine-live aside dt { color: var(--cx-text-tertiary); }
+.orbis-machine-live aside dd { color: var(--cx-text-secondary); }
+.orbis-telemetry-grid { gap: 8px; }
+.orbis-telemetry-grid article { background: transparent; border-color: var(--cx-border); border-radius: var(--cx-radius-lg); gap: 9px; grid-template-columns: 26px 1fr auto; padding: 12px; }
+.orbis-telemetry-grid article > svg { color: var(--cx-text-tertiary); height: 15px; stroke-width: 1.6; width: 15px; }
+.orbis-telemetry-grid small { color: var(--cx-text-tertiary); font-size: 11px; }
+.orbis-telemetry-grid strong { color: var(--cx-text); font-size: 12px; font-weight: 500; }
+.orbis-telemetry-grid article > i { color: var(--cx-green); font-family: inherit; font-size: 11px; }
+
+.orbis-task-summary { background: transparent; border-color: var(--cx-border); border-radius: var(--cx-radius-lg); margin-bottom: 16px; }
+.orbis-task-summary div { padding: 14px 16px; }
+.orbis-task-summary div + div { border-color: var(--cx-border); }
+.orbis-task-summary span { color: var(--cx-text); font-size: 20px; font-weight: 500; letter-spacing: -.02em; }
+.orbis-task-summary small { color: var(--cx-text-tertiary); font-size: 11px; margin-top: 3px; }
+.orbis-task-board { gap: 8px; }
+.orbis-task-column { background: transparent; border-color: var(--cx-border); border-radius: var(--cx-radius-lg); min-height: 450px; padding: 8px; }
+.orbis-task-column > header { min-height: 36px; padding: 0 4px 8px; }
+.orbis-task-column > header span { color: var(--cx-text-secondary); font-size: 12px; font-weight: 500; }
+.orbis-task-column > header span::before { background: var(--cx-text-tertiary); height: 6px; width: 6px; }
+.orbis-task-column.is-live > header span::before { background: var(--cx-blue); }
+.orbis-task-column.is-warn > header span::before { background: var(--cx-red); }
+.orbis-task-column.is-good > header span::before { background: var(--cx-green); }
+.orbis-task-column > header > i { background: rgba(255,255,255,.06); border-radius: var(--cx-radius-sm); color: var(--cx-text-tertiary); font-family: inherit; font-size: 11px; height: 20px; width: 20px; }
+.orbis-task-column > div { gap: 8px; }
+.orbis-task-column button { background: var(--cx-surface-secondary); border-color: var(--cx-border-light); border-radius: var(--cx-radius-md); min-height: 126px; padding: 12px; }
+.orbis-task-column button:hover { border-color: var(--cx-border-strong); }
+.orbis-task-column button.is-selected { border-color: var(--cx-border-strong); box-shadow: inset 2px 0 var(--cx-blue); }
+.orbis-task-column button > span { color: var(--cx-text-tertiary); font-family: ui-monospace, "SFMono-Regular", Menlo, monospace; font-size: 10px; }
+.orbis-task-column button > strong { color: var(--cx-text); font-size: 13px; font-weight: 500; margin: 9px 0 7px; }
+.orbis-task-column button > small { color: var(--cx-text-secondary); font-size: 11px; }
+.orbis-task-column button footer { border-color: var(--cx-border); gap: 6px; margin-top: 12px; padding-top: 9px; }
+.orbis-task-column button footer i { height: 6px; width: 6px; }
+.orbis-task-column.is-live button footer i { background: var(--cx-blue); }
+.orbis-task-column.is-warn button footer i { background: var(--cx-red); }
+.orbis-task-column.is-good button footer i { background: var(--cx-green); }
+.orbis-task-column button footer em { color: var(--cx-text-tertiary); font-family: inherit; font-size: 10px; text-transform: none; }
+
+.orbis-space-layout { background: transparent; border-color: var(--cx-border); border-radius: var(--cx-radius-xl); grid-template-columns: minmax(0,1fr) 230px; margin-bottom: 12px; }
+.orbis-space-map { border-color: var(--cx-border); }
+.orbis-space-map > header { border-color: var(--cx-border); height: 46px; padding: 0 14px; }
+.orbis-space-map > header > span { color: var(--cx-green); font-family: inherit; font-size: 11px; gap: 6px; }
+.orbis-space-map > header > span i { background: var(--cx-green); height: 6px; width: 6px; }
+.orbis-space-map > header button { background: transparent; border-color: var(--cx-border); color: var(--cx-text-tertiary); font-size: 11px; height: 26px; width: 34px; }
+.orbis-space-map > header button.is-active { background: rgba(255,255,255,.08); color: var(--cx-text); }
+.orbis-floorplan { background-color: #0d0d0d; background-image: linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px); }
+.orbis-floorplan::before { border-color: var(--cx-border); }
+.orbis-floorplan::after { border-color: var(--cx-border); }
+.orbis-zone { color: var(--cx-text-tertiary); font-family: inherit; font-size: 10px; letter-spacing: 0; }
+.orbis-route { border-color: rgba(51,156,255,.35); }
+.orbis-map-node { background: rgba(33,33,33,.96); border-color: var(--cx-border); border-radius: var(--cx-radius-md); color: var(--cx-text-secondary); gap: 1px 8px; padding: 8px 10px; }
+.orbis-map-node > span { background: rgba(255,255,255,.06); border-radius: var(--cx-radius-sm); color: var(--cx-text-secondary); }
+.orbis-map-node strong { color: var(--cx-text); font-size: 11px; font-weight: 500; }
+.orbis-map-node small { color: var(--cx-blue); font-family: inherit; font-size: 10px; }
+.orbis-map-node.is-selected { border-color: var(--cx-border-strong); box-shadow: inset 2px 0 var(--cx-blue); }
+.orbis-wait-point { color: var(--cx-text-tertiary); font-family: inherit; font-size: 10px; }
+.orbis-wait-point i { border-color: var(--cx-blue); }
+.orbis-space-inspector { padding: 20px 16px; }
+.orbis-space-inspector > span { color: var(--cx-text-tertiary); font-family: inherit; font-size: 11px; letter-spacing: 0; }
+.orbis-space-inspector h2 { color: var(--cx-text); font-size: 14px; font-weight: 600; margin: 9px 0 2px; }
+.orbis-space-inspector > p { color: var(--cx-text-tertiary); font-size: 11px; }
+.orbis-space-inspector dl div { border-color: var(--cx-border); padding: 10px 0; }
+.orbis-space-inspector dt, .orbis-space-inspector dd { font-size: 11px; }
+.orbis-space-inspector dt { color: var(--cx-text-tertiary); }
+.orbis-space-inspector dd { color: var(--cx-text-secondary); }
+.orbis-space-inspector > button { background: transparent; border-color: var(--cx-border-strong); border-radius: var(--cx-radius-md); color: var(--cx-text); font-size: 12px; margin-top: 16px; min-height: 32px; }
+.orbis-space-inspector > button:hover { background: rgba(255,255,255,.06); }
+.orbis-environment-row { gap: 8px; }
+.orbis-environment-row article { background: transparent; border-color: var(--cx-border); border-radius: var(--cx-radius-lg); gap: 8px; padding: 11px; }
+.orbis-environment-row article > svg { color: var(--cx-text-tertiary); height: 15px; width: 15px; }
+.orbis-environment-row strong { color: var(--cx-text); font-size: 11px; font-weight: 500; }
+.orbis-environment-row small { color: var(--cx-text-tertiary); font-size: 10px; }

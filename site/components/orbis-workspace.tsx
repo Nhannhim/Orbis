@@ -197,7 +197,7 @@ export function OrbisWorkspace({ displayName, demo = false }: { displayName: str
             <span>Northstar Logistics</span><i>/</i><strong>Warehouse 01</strong><ChevronDown />
           </div>
           <div className="orbis-topbar-tools">
-            {demo && <span className="orbis-demo-badge">DEMO</span>}
+            {demo && <span className="orbis-demo-badge">Demo</span>}
             <button className="orbis-search" type="button"><Search /> Search <kbd><Command /> K</kbd></button>
             <span className="orbis-online"><i /> All systems online</span>
           </div>
@@ -206,7 +206,7 @@ export function OrbisWorkspace({ displayName, demo = false }: { displayName: str
         <div className="orbis-page">
           {activeView === 'orchestrator' && <>
             <div className="orbis-page-heading">
-              <div><p>ORCHESTRATOR</p><h1>Direct the physical world.</h1><span>Agents execute together, wait safely, then transfer custody.</span></div>
+              <div><p>Orchestrator</p><h1>Direct the physical world</h1><span>Agents execute together, wait safely, then transfer custody.</span></div>
               <Button variant="outline" size="lg"><Zap /> New workflow</Button>
             </div>
             <section className="orbis-command-card">
@@ -215,24 +215,24 @@ export function OrbisWorkspace({ displayName, demo = false }: { displayName: str
               <Button size="lg" onClick={runObjective} disabled={runState === 'running'}>{runState === 'running' ? <Activity className="spin-soft" /> : <Play />}{runState === 'running' ? 'Orchestrating' : runState === 'attention' ? 'Run recovery' : 'Run objective'}</Button>
             </section>
             <section className="orbis-parallel-card">
-              <div className="orbis-section-heading"><div><span>WF-1042 · FIRST INSTANCE</span><h2>Parallel execution plan</h2></div><span className={`orbis-run-pill is-${runState}`}><i /> {runState}</span></div>
+              <div className="orbis-section-heading"><div><span>WF-1042 · First instance</span><h2>Parallel execution plan</h2></div><span className={`orbis-run-pill is-${runState}`}><i /> {runState}</span></div>
               <div className="orbis-parallel-note"><Waypoints /><span><strong>Three agents dispatched immediately</strong>Independent preparation runs at once. Each agent pauses only at its required handoff.</span></div>
               <div className="orbis-agent-grid">
                 {agents.map((agent) => { const Icon = agentIcon(agent.id); return <button className={`orbis-agent-card is-${agent.state} ${agent.id === selectedAgentId ? 'is-selected' : ''}`} type="button" key={agent.id} onClick={() => setSelectedAgentId(agent.id)}><span className="orbis-agent-icon"><Icon /></span><span className="orbis-agent-copy"><small>{agent.model}</small><strong>{agent.name}</strong><em>{agent.action}</em></span><span className="orbis-agent-state"><i />{stateLabel(agent.state)}</span><span className="orbis-progress"><i style={{ width: `${agent.progress}%` }} /></span><span className="orbis-agent-metric">{agent.progress}%</span></button>; })}
               </div>
               <div className="orbis-handoff-row"><div><span className="is-complete"><Check /></span><strong>Pack + validate</strong><small>Packing Arm 01</small></div><i /><div><span className="is-current">02</span><strong>Custody handoff</strong><small>AMR wait point</small></div><i /><div><span>03</span><strong>Load + prove</strong><small>Dock 04</small></div></div>
             </section>
-            <section className="orbis-activity-card"><div className="orbis-section-heading"><div><span>APPEND-ONLY</span><h2>Coordination activity</h2></div><ShieldCheck /></div><ol>{events.map((event, index) => <li key={`${event.time}-${event.type}-${index}`}><i className={event.tone ? `is-${event.tone}` : ''} /><time>{event.time}</time><strong>{event.type}</strong><span>{event.message}</span></li>)}</ol></section>
+            <section className="orbis-activity-card"><div className="orbis-section-heading"><div><span>Activity log</span><h2>Coordination activity</h2></div><ShieldCheck /></div><ol>{events.map((event, index) => <li key={`${event.time}-${event.type}-${index}`}><i className={event.tone ? `is-${event.tone}` : ''} /><time>{event.time}</time><strong>{event.type}</strong><span>{event.message}</span></li>)}</ol></section>
           </>}
 
           {activeView === 'connections' && <>
             <div className="orbis-page-heading">
-              <div><p>CONNECTIONS</p><h1>Connect every machine.</h1><span>Discover physical agents, pair securely, and publish capabilities.</span></div>
+              <div><p>Connections</p><h1>Connect every machine</h1><span>Discover physical agents, pair securely, and publish capabilities.</span></div>
               <Button size="lg" onClick={() => setQrOpen((current) => !current)}><QrCode /> {qrOpen ? 'Close scanner' : 'Connect machine'}</Button>
             </div>
             {qrOpen && <section className="orbis-qr-card">
               <div><span className="orbis-qr-visual">{Array.from({ length: 81 }, (_, index) => <i className={(index % 4 === 0 || index % 7 === 0 || [1,2,9,10,70,71,79,80].includes(index)) ? 'is-dark' : ''} key={index} />)}</span></div>
-              <div><span>PAIRING MODE · 02:00</span><h2>Scan from the Orbis edge agent</h2><p>Open Orbis Connect on the machine, scan this code, then approve the capabilities it exposes.</p><ol><li><Check /> Encrypted local handshake</li><li><Check /> Vision and sensor permission review</li><li><Check /> Capability contract published</li></ol></div>
+              <div><span>Pairing mode · 02:00</span><h2>Scan from the Orbis edge agent</h2><p>Open Orbis Connect on the machine, scan this code, then approve the capabilities it exposes.</p><ol><li><Check /> Encrypted local handshake</li><li><Check /> Vision and sensor permission review</li><li><Check /> Capability contract published</li></ol></div>
             </section>}
             <section className="orbis-toolbar"><div><Search /><Input aria-label="Search connected machines" placeholder="Search machines, capabilities, or zones" /></div><Button variant="outline"><Filter /> Filter</Button></section>
             <section className="orbis-connection-grid">
@@ -247,23 +247,23 @@ export function OrbisWorkspace({ displayName, demo = false }: { displayName: str
 
           {activeView === 'machines' && <>
             <div className="orbis-page-heading">
-              <div><p>MACHINE DETAIL · 2.1</p><h1>{selectedAgent.name}</h1><span>{selectedAgent.model} · {selectedAgent.location}</span></div>
+              <div><p>Machine detail · 2.1</p><h1>{selectedAgent.name}</h1><span>{selectedAgent.model} · {selectedAgent.location}</span></div>
               <span className={`orbis-machine-health is-${selectedAgent.state}`}><i /> {stateLabel(selectedAgent.state)}</span>
             </div>
             <nav className="orbis-machine-tabs" aria-label="Connected machines">{agents.map((agent) => { const Icon = agentIcon(agent.id); return <button className={agent.id === selectedAgentId ? 'is-active' : ''} type="button" key={agent.id} onClick={() => setSelectedAgentId(agent.id)}><Icon /><span><strong>{agent.name}</strong><small>{agent.location}</small></span></button>; })}</nav>
             <section className="orbis-machine-live">
               <div className="orbis-machine-camera">
-                <header><span><i /> LIVE · CAM-02</span><div><button type="button" aria-label="Pause live camera"><Activity /></button><button type="button" aria-label="Expand live camera"><Maximize2 /></button></div></header>
-                <div className="orbis-camera-surface is-large"><span className="scan-corner scan-corner--one" /><span className="scan-corner scan-corner--two" /><ScanLine className="orbis-scan-line" />{selectedAgent.id === 'packing' ? <Bot /> : selectedAgent.id === 'amr' ? <Truck /> : <Warehouse />}<div><i /> OBJECT LOCK <strong>{selectedAgent.name}</strong></div></div>
+                <header><span><i /> Live · CAM-02</span><div><button type="button" aria-label="Pause live camera"><Activity /></button><button type="button" aria-label="Expand live camera"><Maximize2 /></button></div></header>
+                <div className="orbis-camera-surface is-large"><span className="scan-corner scan-corner--one" /><span className="scan-corner scan-corner--two" /><ScanLine className="orbis-scan-line" />{selectedAgent.id === 'packing' ? <Bot /> : selectedAgent.id === 'amr' ? <Truck /> : <Warehouse />}<div><i /> Object lock <strong>{selectedAgent.name}</strong></div></div>
               </div>
-              <aside><span>CURRENT OPERATION</span><h2>{selectedAgent.action}</h2><p>Orbis validates motion, object state, and environmental safety continuously.</p><div className="orbis-machine-progress"><span><i style={{ width: `${selectedAgent.progress}%` }} /></span><strong>{selectedAgent.progress}%</strong></div><dl><div><dt>Task</dt><dd>ORD-1042</dd></div><div><dt>Confidence</dt><dd>{selectedAgent.confidence}%</dd></div><div><dt>Custody</dt><dd>{selectedAgent.name}</dd></div></dl></aside>
+              <aside><span>Current operation</span><h2>{selectedAgent.action}</h2><p>Orbis validates motion, object state, and environmental safety continuously.</p><div className="orbis-machine-progress"><span><i style={{ width: `${selectedAgent.progress}%` }} /></span><strong>{selectedAgent.progress}%</strong></div><dl><div><dt>Task</dt><dd>ORD-1042</dd></div><div><dt>Confidence</dt><dd>{selectedAgent.confidence}%</dd></div><div><dt>Custody</dt><dd>{selectedAgent.name}</dd></div></dl></aside>
             </section>
             <section className="orbis-telemetry-grid"><article><Camera /><span><small>Vision stream</small><strong>30 FPS · 1080p</strong></span><i>Healthy</i></article><article><Activity /><span><small>Edge inference</small><strong>12 ms latency</strong></span><i>Healthy</i></article><article><ShieldCheck /><span><small>Safety envelope</small><strong>No intrusion</strong></span><i>Clear</i></article></section>
           </>}
 
           {activeView === 'tasks' && <>
             <div className="orbis-page-heading">
-              <div><p>TASKS</p><h1>Every physical task, visible.</h1><span>Work is grouped by readiness, execution, exceptions, and proof.</span></div>
+              <div><p>Tasks</p><h1>Every physical task, visible</h1><span>Work is grouped by readiness, execution, exceptions, and proof.</span></div>
               <Button variant="outline" size="lg"><Plus /> New task</Button>
             </div>
             <section className="orbis-task-summary"><div><span>18</span><small>Today</small></div><div><span>3</span><small>Running now</small></div><div><span>1</span><small>Needs attention</small></div><div><span>98.2%</span><small>Validation rate</small></div></section>
@@ -272,18 +272,18 @@ export function OrbisWorkspace({ displayName, demo = false }: { displayName: str
 
           {activeView === 'space' && <>
             <div className="orbis-page-heading">
-              <div><p>SPACE &amp; ENVIRONMENT</p><h1>Warehouse 01</h1><span>A live spatial model for machines, routes, safety zones, and handoffs.</span></div>
+              <div><p>Space and environment</p><h1>Warehouse 01</h1><span>A live spatial model for machines, routes, safety zones, and handoffs.</span></div>
               <Button variant="outline" size="lg"><ScanLine /> Rescan space</Button>
             </div>
             <section className="orbis-space-layout">
               <div className="orbis-space-map">
-                <header><span><i /> LIVE WORLD MODEL</span><div><button type="button">2D</button><button className="is-active" type="button">3D</button></div></header>
-                <div className="orbis-floorplan"><span className="orbis-zone zone-a">PACKING A</span><span className="orbis-zone zone-b">STAGING</span><span className="orbis-zone zone-c">DOCK 04</span><i className="orbis-route" />
+                <header><span><i /> Live world model</span><div><button type="button">2D</button><button className="is-active" type="button">3D</button></div></header>
+                <div className="orbis-floorplan"><span className="orbis-zone zone-a">Packing A</span><span className="orbis-zone zone-b">Staging</span><span className="orbis-zone zone-c">Dock 04</span><i className="orbis-route" />
                   {agents.map((agent) => { const Icon = agentIcon(agent.id); return <button className={`orbis-map-node is-${agent.id} ${selectedAgentId === agent.id ? 'is-selected' : ''}`} type="button" key={agent.id} onClick={() => setSelectedAgentId(agent.id)}><span><Icon /></span><strong>{agent.name}</strong><small>{stateLabel(agent.state)}</small></button>; })}
-                  <span className="orbis-wait-point"><i /> WAIT POINT C2</span>
+                  <span className="orbis-wait-point"><i /> Wait point C2</span>
                 </div>
               </div>
-              <aside className="orbis-space-inspector"><span>SELECTED AGENT</span><h2>{selectedAgent.name}</h2><p>{selectedAgent.location}</p><dl><div><dt>Localization</dt><dd>± 1.8 cm</dd></div><div><dt>Safety radius</dt><dd>1.2 m</dd></div><div><dt>Vision coverage</dt><dd>98%</dd></div><div><dt>Route state</dt><dd>Clear</dd></div></dl><button type="button" onClick={() => setActiveView('machines')}><Eye /> Open live machine view</button></aside>
+              <aside className="orbis-space-inspector"><span>Selected agent</span><h2>{selectedAgent.name}</h2><p>{selectedAgent.location}</p><dl><div><dt>Localization</dt><dd>± 1.8 cm</dd></div><div><dt>Safety radius</dt><dd>1.2 m</dd></div><div><dt>Vision coverage</dt><dd>98%</dd></div><div><dt>Route state</dt><dd>Clear</dd></div></dl><button type="button" onClick={() => setActiveView('machines')}><Eye /> Open live machine view</button></aside>
             </section>
             <section className="orbis-environment-row"><article><Box /><span><strong>3 active agents</strong><small>All localized</small></span></article><article><Map /><span><strong>6 mapped zones</strong><small>2 wait points</small></span></article><article><AlertTriangle /><span><strong>0 safety events</strong><small>Last 24 hours</small></span></article><article><CheckCircle2 /><span><strong>Map confidence 99%</strong><small>Updated 12 sec ago</small></span></article></section>
           </>}
@@ -291,19 +291,19 @@ export function OrbisWorkspace({ displayName, demo = false }: { displayName: str
       </section>
 
       <aside className="orbis-status-panel" aria-label="Live status and workflow">
-        <header><div><span>LIVE CONTROL</span><strong>Status &amp; workflow</strong></div><span className="orbis-live-pill"><i /> LIVE</span></header>
+        <header><div><span>Live control</span><strong>Status and workflow</strong></div><span className="orbis-live-pill"><i /> Live</span></header>
         <section className="orbis-live-view">
           <div className="orbis-live-meta"><span><Wifi /> {selectedAgent.location}</span><time>{nowTime()}</time></div>
           <div className="orbis-camera-surface">
             <span className="scan-corner scan-corner--one" /><span className="scan-corner scan-corner--two" /><ScanLine className="orbis-scan-line" />
             {selectedAgent.id === 'packing' ? <Bot /> : selectedAgent.id === 'amr' ? <Truck /> : <Warehouse />}
-            <div><i /> TRACKING <strong>{selectedAgent.name}</strong></div>
+            <div><i /> Tracking <strong>{selectedAgent.name}</strong></div>
           </div>
           <div className="orbis-live-caption"><span><small>Current action</small><strong>{selectedAgent.action}</strong></span><em>{selectedAgent.confidence}%</em></div>
         </section>
 
         <section className="orbis-validation">
-          <div className="orbis-status-heading"><span>VISION VALIDATION</span><strong>{selectedAgent.state === 'issue' ? 'Outcome uncertain' : 'Task confidence'}</strong></div>
+          <div className="orbis-status-heading"><span>Vision validation</span><strong>{selectedAgent.state === 'issue' ? 'Outcome uncertain' : 'Task confidence'}</strong></div>
           <div className="orbis-validation-score"><strong>{selectedAgent.confidence}<sup>%</sup></strong><span><i style={{ width: `${selectedAgent.confidence}%` }} /></span></div>
           <p><ShieldCheck /> Policy threshold 90% · continuous evidence</p>
         </section>
