@@ -7,7 +7,7 @@ import {
   Activity, AlertTriangle, ArrowLeft, ArrowUp, Bot, Boxes, Cable, Check, CheckCircle2, CircleHelp,
   Clock3, ListChecks, Map, MessageSquarePlus, MoreHorizontal, Package, PanelLeftClose,
   PanelLeftOpen, PanelRightClose, PanelRightOpen, Plus, QrCode, Radio, ScanLine,
-  RefreshCw, Search, Settings, ShieldCheck, Sparkles, Truck, UserCheck, Warehouse, Waypoints, Wifi, X,
+  House, RefreshCw, Search, Settings, ShieldCheck, Sparkles, Truck, UserCheck, Warehouse, Waypoints, Wifi, X,
 } from 'lucide-react';
 import { MachineThreePreview } from '@/components/machine-three-preview';
 import { OrbisMark } from '@/components/orbis-mark';
@@ -36,6 +36,7 @@ type MachineId = 'packing' | 'amr' | 'loading';
 type ProcessId = 'pack' | 'route' | 'truck' | 'move' | 'load';
 type ProcessStatus = 'running' | 'waiting' | 'success' | 'not_validated';
 type SessionReturn = ViewId | 'connection-detail' | null;
+type TaskScenarioId = 'warehouse' | 'home';
 
 type MachineSession = { id: string; title: string; time: string; success: boolean | null };
 type Machine = {
@@ -48,6 +49,21 @@ type Machine = {
   sessions: MachineSession[];
 };
 type ProcessNode = { id: ProcessId; title: string; machineId: MachineId; detail: string; x: number; y: number };
+
+const taskScenarios: Record<TaskScenarioId, { title: string; eyebrow: string; description: string; objective: string }> = {
+  warehouse: {
+    title: 'Warehouse',
+    eyebrow: 'Fulfillment network',
+    description: 'Coordinate picking, package inspection, routing, and verified physical handoffs.',
+    objective: 'Fulfill ORD-1042 and load truck-17 at dock 04',
+  },
+  home: {
+    title: 'Home',
+    eyebrow: 'Dinner preparation',
+    description: 'Coordinate a Roomba, humanoid cook, loader, furniture robot, and lamp agent.',
+    objective: 'Prepare a vegetarian pasta dinner for 12 by 7:00 PM, clean the dining area, and set the table',
+  },
+};
 
 const machines: Record<MachineId, Machine> = {
   packing: {
@@ -320,6 +336,7 @@ export function OrbisWorkspace({ displayName, demo = false }: { displayName: str
   const [selectedMachineId, setSelectedMachineId] = useState<MachineId>('packing');
   const [connectionScreen, setConnectionScreen] = useState<'list' | 'detail'>('list');
   const [machineDetailReturn, setMachineDetailReturn] = useState<ViewId>('connections');
+  const [taskScenarioId, setTaskScenarioId] = useState<TaskScenarioId>('warehouse');
   const [objective, setObjective] = useState('Fulfill ORD-1042 and load truck-17 at dock 04');
   const [followUp, setFollowUp] = useState('');
   const [scenarios, setScenarios] = useState<VisionScenario[]>(fallbackVisionScenarios);
@@ -398,11 +415,18 @@ export function OrbisWorkspace({ displayName, demo = false }: { displayName: str
     setActiveView('orchestrator');
     setTaskMode('new');
     setSessionReturn(null);
-    setObjective('');
+    setTaskScenarioId('warehouse');
+    setObjective(taskScenarios.warehouse.objective);
     setFollowUp('');
     setWorkflow(null);
     setApiError(null);
     setWorkflowOpen(false);
+  }
+
+  function selectTaskScenario(nextScenarioId: TaskScenarioId) {
+    setTaskScenarioId(nextScenarioId);
+    setObjective(taskScenarios[nextScenarioId].objective);
+    setApiError(null);
   }
 
   function selectProcess(processId: ProcessId) {
@@ -531,15 +555,27 @@ export function OrbisWorkspace({ displayName, demo = false }: { displayName: str
     {activeView === 'orchestrator' && taskMode === 'new' && <div className="ow-detail-scroll ow-new-task-page">
       <section className="ow-new-task-empty">
         <div className="ow-new-task-mark"><OrbisMark /></div>
-        <h1>What should your machines do?</h1>
-        <p>Describe the outcome. Orbis will create a task session, start independent work in parallel, and coordinate every handoff.</p>
+        <h1>Where should Orbis coordinate?</h1>
+        <p>Choose a scenario, then describe the outcome. Orbis will organize the workers, parallel tasks, policies, and handoffs.</p>
+        <div className="ow-task-scenario-grid" aria-label="New task scenario">
+          <button className={`ow-task-scenario-card ${taskScenarioId === 'warehouse' ? 'is-selected' : ''}`} type="button" aria-pressed={taskScenarioId === 'warehouse'} onClick={() => selectTaskScenario('warehouse')}>
+            <span className="ow-task-scenario-icon"><Warehouse /></span>
+            <span><small>{taskScenarios.warehouse.eyebrow}</small><strong>{taskScenarios.warehouse.title}</strong><em>{taskScenarios.warehouse.description}</em></span>
+            <i>{taskScenarioId === 'warehouse' ? <Check /> : <ArrowUp />}</i>
+          </button>
+          <button className={`ow-task-scenario-card ${taskScenarioId === 'home' ? 'is-selected' : ''}`} type="button" aria-pressed={taskScenarioId === 'home'} onClick={() => selectTaskScenario('home')}>
+            <span className="ow-task-scenario-icon"><House /></span>
+            <span><small>{taskScenarios.home.eyebrow}</small><strong>{taskScenarios.home.title}</strong><em>{taskScenarios.home.description}</em></span>
+            <i>{taskScenarioId === 'home' ? <Check /> : <ArrowUp />}</i>
+          </button>
+        </div>
         <section className="ow-prompt-card ow-new-task-composer">
           <Textarea aria-label="New task objective" placeholder="Ask Orbis to coordinate an outcome…" value={objective} onChange={(event) => setObjective(event.target.value)} disabled={isRunning} />
-          <ScenarioControls scenarios={scenarios} selectedId={scenarioId} onSelect={setScenarioId} mode={visionMode} onModeChange={setVisionMode} disabled={isRunning} />
+          {taskScenarioId === 'warehouse' && <ScenarioControls scenarios={scenarios} selectedId={scenarioId} onSelect={setScenarioId} mode={visionMode} onModeChange={setVisionMode} disabled={isRunning} />}
+          {taskScenarioId === 'home' && <div className="ow-home-scenario-note"><House /><span><strong>Five coordinated Home workers</strong><small>Roomba · Humanoid cook · Loader robot · Furniture robot · Lamp agent</small><small>The dinner workflow is the next scenario to connect to the coordinator.</small></span></div>}
           {apiError && <div className="ow-api-error is-compact"><AlertTriangle /><span><strong>Backend offline</strong><small>{apiError}</small></span><button type="button" onClick={retryCurrentWorkflow} disabled={actionPending}><RefreshCw /> Retry</button></div>}
-          <footer><span><Sparkles /> First-instance execution</span><Button size="icon" aria-label="Start task" onClick={runObjective} disabled={isRunning || !objective.trim()}>{isRunning ? <Activity className="spin-soft" /> : <ArrowUp />}</Button></footer>
+          <footer><span><Sparkles /> {taskScenarioId === 'warehouse' ? 'First-instance warehouse execution' : 'Home scenario preview'}</span><Button size="icon" aria-label={taskScenarioId === 'warehouse' ? 'Start warehouse task' : 'Home workflow is not connected yet'} onClick={runObjective} disabled={taskScenarioId === 'home' || isRunning || !objective.trim()}>{isRunning ? <Activity className="spin-soft" /> : <ArrowUp />}</Button></footer>
         </section>
-        <div className="ow-task-suggestions"><button type="button" onClick={() => setObjective('Fulfill ORD-1042 and load truck-17 at dock 04')}>Fulfill an outbound order</button><button type="button" onClick={() => setObjective('Inspect aisle D, count available inventory, and report exceptions')}>Run an inventory sweep</button><button type="button" onClick={() => setObjective('Reset dock 04 and validate the safety zone')}>Reset a loading dock</button></div>
       </section>
     </div>}
 

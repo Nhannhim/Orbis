@@ -1980,8 +1980,27 @@
 .ow-new-task-mark svg { height: 20px; width: 20px; }
 .ow-new-task-empty > h1 { font-size: 22px; font-weight: 600; letter-spacing: -.035em; margin: 0; }
 .ow-new-task-empty > p { color: rgba(26,28,31,.5); font-size: 12px; line-height: 1.55; margin: 8px auto 22px; max-width: 540px; }
+.ow-task-scenario-grid { display: grid; gap: 9px; grid-template-columns: repeat(2,minmax(0,1fr)); margin: 0 0 12px; text-align: left; }
+.ow-task-scenario-card { align-items: center; background: #fff; border: 1px solid rgba(26,28,31,.1); border-radius: 12px; color: #1a1c1f; cursor: pointer; display: grid; gap: 10px; grid-template-columns: 38px minmax(0,1fr) 20px; min-height: 96px; padding: 12px; text-align: left; transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease; }
+.ow-task-scenario-card:hover { border-color: rgba(26,28,31,.22); transform: translateY(-1px); }
+.ow-task-scenario-card.is-selected { border-color: rgba(26,28,31,.72); box-shadow: 0 0 0 1px rgba(26,28,31,.72); }
+.ow-task-scenario-icon { align-items: center; background: #f3f3f3; border-radius: 10px; display: flex; height: 38px; justify-content: center; width: 38px; }
+.ow-task-scenario-icon svg { height: 17px; width: 17px; }
+.ow-task-scenario-card > span:nth-child(2) { display: grid; gap: 2px; min-width: 0; }
+.ow-task-scenario-card small { color: rgba(26,28,31,.42); font-size: 8px; text-transform: uppercase; }
+.ow-task-scenario-card strong { font-size: 12px; font-weight: 600; }
+.ow-task-scenario-card em { color: rgba(26,28,31,.48); font-size: 9px; font-style: normal; line-height: 1.4; }
+.ow-task-scenario-card > i { align-items: center; border: 1px solid rgba(26,28,31,.12); border-radius: 50%; color: rgba(26,28,31,.45); display: flex; height: 20px; justify-content: center; width: 20px; }
+.ow-task-scenario-card > i svg { height: 10px; transform: rotate(90deg); width: 10px; }
+.ow-task-scenario-card.is-selected > i { background: #1a1c1f; border-color: #1a1c1f; color: #fff; }
+.ow-task-scenario-card.is-selected > i svg { transform: none; }
 .ow-new-task-composer { margin-bottom: 12px; text-align: left; }
 .ow-new-task-composer textarea { min-height: 92px; }
+.ow-home-scenario-note { align-items: center; background: #fafafa; border: 1px solid rgba(26,28,31,.07); border-radius: 10px; display: flex; gap: 9px; margin-bottom: 9px; padding: 10px; }
+.ow-home-scenario-note > svg { color: rgba(26,28,31,.54); height: 15px; width: 15px; }
+.ow-home-scenario-note > span { display: grid; gap: 2px; }
+.ow-home-scenario-note strong { font-size: 9px; font-weight: 600; }
+.ow-home-scenario-note small { color: rgba(26,28,31,.45); font-size: 8px; }
 .ow-task-suggestions { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
 .ow-task-suggestions button { background: #fff; border: 1px solid rgba(26,28,31,.09); border-radius: 8px; color: rgba(26,28,31,.6); cursor: pointer; font-size: 9px; padding: 7px 9px; }
 .ow-task-suggestions button:hover { background: #f7f7f7; border-color: rgba(26,28,31,.16); color: #1a1c1f; }
@@ -2048,6 +2067,7 @@
   .ow-machine-detail-hero > div:last-child { border-left: 0; border-top: 1px solid rgba(26,28,31,.08); }
   .ow-activity-steps { gap: 6px; grid-template-columns: 1fr; }
   .ow-activity-steps > i { display: none; }
+  .ow-task-scenario-grid { grid-template-columns: 1fr; }
 }
 
 /* Backend-driven vision gate and downstream routing */
