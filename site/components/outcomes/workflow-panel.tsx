@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowDown, Check, House, LockKeyhole, PackageCheck, Sparkles, Truck, UtensilsCrossed, Warehouse } from 'lucide-react';
+import { Activity, ArrowDown, Check, House, LockKeyhole, PackageCheck, Sparkles, Truck, UtensilsCrossed, Warehouse } from 'lucide-react';
 import type { OutcomeLaneView, OutcomeTaskView, OutcomeView } from '@/lib/outcome-api';
 import { displayToken, ProgressBar, StatusIcon } from './outcome-ui';
 import styles from './outcomes.module.css';
@@ -25,6 +25,7 @@ export function OutcomeWorkflowPanel({ outcome, selectedTaskId, onSelectTask, on
       <div className={styles.graphScroll}>
         <div className={styles.graphOrigin}><small>Outcome</small><strong>{outcome.title}</strong></div>
         <ArrowDown className={styles.graphArrow} />
+        <div className={styles.parallelNotice}><Activity /><span><strong>Running in parallel</strong><small>Warehouse and Home advance independently</small></span></div>
         <div className={styles.parallelGraph}>
           {warehouse && <LaneGraph lane={warehouse} icon={<Warehouse />} selectedTaskId={selectedTaskId} onSelectTask={onSelectTask} />}
           {home && <LaneGraph lane={home} icon={<House />} selectedTaskId={selectedTaskId} onSelectTask={onSelectTask} stopBefore={groceriesReceived?.id} />}
@@ -48,7 +49,10 @@ export function OutcomeWorkflowPanel({ outcome, selectedTaskId, onSelectTask, on
 
 function LaneGraph({ lane, icon, selectedTaskId, onSelectTask, stopBefore }: { lane: OutcomeLaneView; icon: React.ReactNode; selectedTaskId?: string; onSelectTask?: (task: OutcomeTaskView) => void; stopBefore?: string }) {
   const tasks = stopBefore ? lane.tasks.slice(0, Math.max(0, lane.tasks.findIndex((task) => task.id === stopBefore))) : lane.tasks;
-  return <section className={styles.graphLane}><header><span>{icon}</span><div><small>{displayToken(lane.status)}</small><strong>{lane.label}</strong></div><em>{lane.progress}%</em></header><div>{tasks.map((task) => <CompactNode key={task.id} task={task} title={task.title} detail={task.currentAction ?? task.workerName ?? 'Waiting for release'} status={task.status} blockedBy={task.blockingReasons[0]} selected={task.id === selectedTaskId} onSelect={onSelectTask} />)}</div></section>;
+  const active = tasks.filter((task) => ['reserved', 'executing', 'verifying', 'attention_required'].includes(task.status));
+  const focus = active[0] ?? tasks.find((task) => task.status === 'ready') ?? tasks.find((task) => task.status === 'queued') ?? tasks.at(-1);
+  const completed = tasks.filter((task) => ['completed', 'skipped'].includes(task.status)).length;
+  return <section className={styles.graphLane}><header><span>{icon}</span><div><small>{displayToken(lane.status)}</small><strong>{lane.label}</strong></div><em>{lane.progress}%</em></header><div>{focus && <CompactNode task={focus} title={focus.title} detail={focus.currentAction ?? focus.workerName ?? 'Waiting for release'} status={focus.status} blockedBy={focus.blockingReasons[0]} selected={focus.id === selectedTaskId} onSelect={onSelectTask} />}<footer className={styles.laneSummaryMeta}><span>{completed} of {tasks.length} complete</span>{active.length > 1 && <strong>+{active.length - 1} also working</strong>}</footer></div></section>;
 }
 
 function CompactNode({ task, title, detail, status, icon, blockedBy, selected, onSelect }: { task?: OutcomeTaskView; title: string; detail: string; status: string; icon?: React.ReactNode; blockedBy?: string; selected?: boolean; onSelect?: (task: OutcomeTaskView) => void }) {

@@ -1,6 +1,6 @@
 'use client';
 
-import type { OutcomeActionKind, OutcomePlanView, OutcomeTaskView, OutcomeView, OutcomeWorkerView } from '@/lib/outcome-api';
+import type { OutcomeActionKind, OutcomePlanView, OutcomeTaskView, OutcomeView } from '@/lib/outcome-api';
 import { AttentionPanel } from './attention-panel';
 import { CleanupView } from './cleanup-view';
 import { CompletionView } from './completion-view';
@@ -8,7 +8,7 @@ import { DinnerReadyView } from './dinner-ready-view';
 import { LiveSessionView } from './live-session-view';
 import { PlanReviewView } from './plan-review-view';
 
-export function OutcomeExperience({ plan, outcome, busy = false, selectedTaskId, onBack, onApprovePlan, onAction, onSelectTask, onSelectWorker, onRepeat, onSaveTemplate }: {
+export function OutcomeExperience({ plan, outcome, busy = false, selectedTaskId, onBack, onApprovePlan, onAction, onSelectTask, onRepeat, onSaveTemplate }: {
   plan?: OutcomePlanView | null;
   outcome?: OutcomeView | null;
   busy?: boolean;
@@ -17,7 +17,6 @@ export function OutcomeExperience({ plan, outcome, busy = false, selectedTaskId,
   onApprovePlan?: () => void;
   onAction?: (action: OutcomeActionKind) => void;
   onSelectTask?: (task: OutcomeTaskView) => void;
-  onSelectWorker?: (worker: OutcomeWorkerView) => void;
   onRepeat?: () => void;
   onSaveTemplate?: () => void;
 }) {
@@ -27,6 +26,6 @@ export function OutcomeExperience({ plan, outcome, busy = false, selectedTaskId,
   if (outcome.status === 'completed' || outcome.phase === 'completed') return <CompletionView outcome={outcome} onRepeat={onRepeat} onSaveTemplate={onSaveTemplate} />;
   if (outcome.status === 'cleaning_up' || outcome.phase === 'cleanup') return <CleanupView outcome={outcome} />;
   if (outcome.status === 'dinner_ready' || outcome.phase === 'dinner_ready') return <DinnerReadyView outcome={outcome} busy={busy} onBeginCleanup={() => action('begin_cleanup')} onKeepWarm={() => action('keep_warm')} onReportIssue={() => action('report_issue')} />;
-  if ((outcome.status === 'attention_required' || outcome.status === 'blocked') && outcome.attention[0]) return <section><AttentionPanel attention={outcome.attention[0]} onAction={action} /><LiveSessionView outcome={outcome} selectedTaskId={selectedTaskId} onSelectTask={onSelectTask} onSelectWorker={onSelectWorker} /></section>;
-  return <LiveSessionView outcome={outcome} selectedTaskId={selectedTaskId} onSelectTask={onSelectTask} onSelectWorker={onSelectWorker} onAction={action} />;
+  if ((outcome.status === 'attention_required' || outcome.status === 'blocked') && outcome.attention[0]) return <section><AttentionPanel attention={outcome.attention[0]} onAction={action} /><LiveSessionView outcome={outcome} selectedTaskId={selectedTaskId} onSelectTask={onSelectTask} /></section>;
+  return <LiveSessionView outcome={outcome} selectedTaskId={selectedTaskId} onSelectTask={onSelectTask} onAction={action} />;
 }

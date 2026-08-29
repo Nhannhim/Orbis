@@ -22,8 +22,8 @@ Open [http://localhost:3000/app/demo](http://localhost:3000/app/demo). The UI mu
 
 1. Select **Home** on New Task and keep the proposed vegetarian pasta objective.
 2. Select **Create plan**. Review the menu, grocery estimate, workers, parallel schedule, and hard approval gate.
-3. Select **Approve order & start**. Point out that Warehouse and Home preparation start independently.
-4. In the right **Workflow** rail, follow Warehouse and Home branches in parallel. Select any node to highlight its task in the session.
+3. Select **Approve order & start**. Keep the center Home camera grid and right **Workflow** rail visible together. Point out that Warehouse and Home preparation start independently.
+4. Watch active Home feeds highlight together while the right rail names each branch's current task, progress, dependency, and join point. Select a rail node to inspect that task in the session.
 5. Show the specialized produce, dry-goods, and cold-storage pickers feeding the existing Vision, packing, AMR, and loading workflow.
 6. Show **SIMULATED ROUTING**. The small robot is rejected for volume and refrigeration; the large delivery worker is selected with explicit reasons.
 7. Follow the delivery join: Loader Robot accepts and reconciles grocery custody, then Humanoid Cook receives the ingredients.
@@ -31,7 +31,7 @@ Open [http://localhost:3000/app/demo](http://localhost:3000/app/demo). The UI mu
 9. Select **Dinner is over — start cleanup**. Follow Loader, Humanoid Cook, Furniture Robot, Roomba, and Lamp Agent through restoration.
 10. End on **Completed**, where every required cleanup check has proof and the outcome progress is 100%.
 
-The complete fixture story takes about 12 seconds of simulated execution plus presenter time. Videos must remain labeled **SIMULATED FEED** and never advance task state.
+The dinner-ready phase takes about 20–25 seconds and cleanup takes about 8 seconds, leaving enough time to narrate parallel work and handoffs. Videos must remain labeled **SIMULATED FEED** and never advance task state.
 
 ## Supporting Vision story: damaged package
 

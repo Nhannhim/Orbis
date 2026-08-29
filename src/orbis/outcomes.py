@@ -132,7 +132,7 @@ class OutcomeCoordinator:
         planner: Optional[DinnerPlanner] = None,
         *,
         background_execution: bool = True,
-        step_delay_seconds: float = 0.12,
+        step_delay_seconds: float = 1.5,
     ) -> None:
         self.warehouse = warehouse
         self.planner = planner or FixtureDinnerPlanner()
@@ -422,12 +422,8 @@ class OutcomeCoordinator:
                     self._outcomes[outcome_id].worker_running = False
 
     def _run_dinner(self, record: _OutcomeRecord) -> None:
-        for task_id in ("wh_reserve", "home_floors", "home_stage", "home_furniture", "home_lighting"):
-            if not self._run_task(record, task_id):
-                return
-        for task_id in ("wh_produce", "wh_dry", "wh_cold", "wh_consolidate"):
-            if not self._run_task(record, task_id):
-                return
+        if not self._run_parallel_preparation(record):
+            return
         if not self._run_warehouse(record):
             return
         for task_id in ("delivery_route", "delivery_transit", "home_receive", "home_cook", "home_verify", "dinner_ready"):
@@ -443,6 +439,60 @@ class OutcomeCoordinator:
             record.phase = "dinner_ready"
             record.updated_at = utc_now()
             self._append_event(record, "dinner.ready", "Dinner for 12 is ready and verified", {})
+
+    def _run_parallel_preparation(self, record: _OutcomeRecord) -> bool:
+        """Make the Warehouse and Home concurrency visible at presentation pace."""
+
+        with self._lock:
+            if self._status(record, "wh_consolidate") == "completed":
+                return True
+            initial = (
+                "wh_reserve",
+                "home_floors",
+                "home_stage",
+                "home_furniture",
+                "home_lighting",
+            )
+            for task_id in initial:
+                if not self._begin_task_locked(record, task_id):
+                    return False
+            self._append_event(
+                record,
+                "tasks.parallel_started",
+                "Warehouse reservation and four Home preparation tasks are running in parallel",
+                {"task_ids": list(initial)},
+            )
+
+        self._presentation_pause()
+        with self._lock:
+            self._finish_executing_locked(record, "wh_reserve", "Inventory reserved")
+            self._finish_executing_locked(record, "home_lighting", "Preparation lighting active")
+            pickers = ("wh_produce", "wh_dry", "wh_cold")
+            for task_id in pickers:
+                if not self._begin_task_locked(record, task_id):
+                    return False
+            self._append_event(
+                record,
+                "tasks.parallel_started",
+                "Three specialized pickers joined the ongoing Home preparation",
+                {"task_ids": list(pickers)},
+            )
+
+        self._presentation_pause()
+        with self._lock:
+            self._finish_executing_locked(record, "wh_dry", "Dry goods picked and verified")
+            self._finish_executing_locked(record, "home_stage", "Kitchen staged for delivery")
+
+        self._presentation_pause()
+        with self._lock:
+            self._finish_executing_locked(record, "wh_cold", "Cold-storage items picked and verified")
+            self._finish_executing_locked(record, "home_furniture", "Table and twelve chairs positioned safely")
+
+        self._presentation_pause()
+        with self._lock:
+            self._finish_executing_locked(record, "wh_produce", "Produce picked and verified")
+            self._finish_executing_locked(record, "home_floors", "Dining-area floor coverage verified")
+        return self._run_task(record, "wh_consolidate")
 
     def _run_warehouse(self, record: _OutcomeRecord) -> bool:
         with self._lock:
@@ -524,6 +574,27 @@ class OutcomeCoordinator:
         with self._lock:
             self._finish_executing_locked(record, task_id, "Simulated task completion verified")
         return True
+
+    def _begin_task_locked(self, record: _OutcomeRecord, task_id: str) -> bool:
+        status = self._status(record, task_id)
+        if status == "completed":
+            return True
+        if status not in {"ready", "reserved", "executing", "verifying"}:
+            return False
+        if status in {"ready", "reserved"}:
+            self._set_executing_locked(record, task_id)
+            task = record.graph.task(task_id)
+            self._append_event(
+                record,
+                "task.started",
+                f"{task['name']} started",
+                {"task_id": task_id, "lane": task["lane"]},
+            )
+        return True
+
+    def _presentation_pause(self) -> None:
+        if self.step_delay_seconds > 0:
+            sleep(self.step_delay_seconds)
 
     # -- Recovery and views ----------------------------------------------
 

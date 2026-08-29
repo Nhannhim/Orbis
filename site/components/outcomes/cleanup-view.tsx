@@ -3,6 +3,7 @@
 import { Check, Clock3, Home, RotateCcw } from 'lucide-react';
 import type { OutcomeView } from '@/lib/outcome-api';
 import { EvidenceTimeline } from './evidence-timeline';
+import { HomeFeedGrid } from './home-feed-grid';
 import { formatTime, ProgressBar, StatusPill } from './outcome-ui';
 import { WorkerCard } from './worker-card';
 import styles from './outcomes.module.css';
@@ -15,6 +16,7 @@ export function CleanupView({ outcome }: { outcome: OutcomeView }) {
     <section className={styles.screen}>
       <header className={styles.screenHeader}><div><div><span className={styles.liveLabel}><i /> SIMULATED EXECUTION</span><h1>Restore the home</h1><p>Dinner is complete. Orbis is clearing, cleaning, and returning the room to its normal state.</p></div></div><div className={styles.deadline}><Clock3 /><span><small>Expected complete</small><strong>{formatTime(outcome.predictedCompletion) ?? 'Calculating'}</strong></span></div></header>
       <section className={styles.cleanupProgress}><div><StatusPill status={outcome.status} /><strong>{outcome.currentAction ?? 'Coordinating cleanup dependencies'}</strong></div><ProgressBar value={progress} label={`${progress}% of cleanup complete`} /></section>
+      <HomeFeedGrid outcome={outcome} />
       <div className={styles.cleanupGrid}>
         {outcome.cleanupChecklist.map((item, index) => <article className={item.status === 'verified' ? styles.verified : item.status === 'attention' ? styles.needsAttention : ''} key={item.id}><span>{item.status === 'verified' ? <Check /> : <Clock3 />}</span><div><small>Step {index + 1}</small><strong>{item.label}</strong><em>{item.status === 'verified' ? 'Proof recorded' : index === completed ? 'Working now' : 'Waiting for dependency'}</em></div></article>)}
       </div>
