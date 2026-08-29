@@ -1,0 +1,63 @@
+{
+  "id": "outcome_dinner_12_cleanup",
+  "plan_id": "plan_dinner_12",
+  "title": "Pasta dinner for 12",
+  "objective": "Prepare a vegetarian pasta dinner for 12 by 7:00 PM and restore the home afterward.",
+  "scenario": "home_dinner",
+  "status": "cleaning_up",
+  "phase": "cleanup",
+  "progress_percent": 92,
+  "deadline": "2026-08-29T19:00:00-07:00",
+  "predicted_completion": "2026-08-29T20:43:00-07:00",
+  "schedule_risk": "on_track",
+  "current_action": "Loader Robot is clearing dishes while the Humanoid Cook stores leftovers.",
+  "current_worker_id": "home-loader-01",
+  "next_action": "Restore the furniture layout, then release the Roomba for final floor cleaning.",
+  "blocked_by": [],
+  "lanes": [
+    {"id": "warehouse", "name": "Warehouse", "status": "completed", "progress_percent": 100, "current_task_id": null, "blocked_by": [], "predicted_completion": "2026-08-29T17:12:00-07:00", "tasks": []},
+    {"id": "delivery", "name": "Delivery", "status": "completed", "progress_percent": 100, "current_task_id": null, "blocked_by": [], "predicted_completion": "2026-08-29T17:55:00-07:00", "tasks": []},
+    {
+      "id": "home",
+      "name": "Home",
+      "status": "executing",
+      "progress_percent": 88,
+      "current_task_id": "task_cleanup_clear",
+      "blocked_by": [],
+      "predicted_completion": "2026-08-29T20:43:00-07:00",
+      "tasks": [
+        {"id": "task_cleanup_lighting", "lane_id": "home", "name": "Set cleanup lighting", "capability": "set_cleanup_lighting", "status": "completed", "required": true, "assigned_worker_id": "home-lamp-agent-01", "progress_percent": 100, "current_action": "Cleanup lighting is active.", "depends_on": [], "blocked_by": [], "started_at": "2026-08-29T20:10:00-07:00", "expected_completion": "2026-08-29T20:11:00-07:00", "completed_at": "2026-08-29T20:10:20-07:00", "evidence_ids": ["ev_cleanup_lighting"], "error": null, "permitted_actions": []},
+        {"id": "task_cleanup_clear", "lane_id": "home", "name": "Clear dishes and surfaces", "capability": "clean_surfaces", "status": "executing", "required": true, "assigned_worker_id": "home-loader-01", "progress_percent": 70, "current_action": "Clearing serving dishes and wiping approved surfaces.", "depends_on": [], "blocked_by": [], "started_at": "2026-08-29T20:10:00-07:00", "expected_completion": "2026-08-29T20:24:00-07:00", "completed_at": null, "evidence_ids": [], "error": null, "permitted_actions": []},
+        {"id": "task_cleanup_kitchen", "lane_id": "home", "name": "Store leftovers and secure equipment", "capability": "store_leftovers", "status": "executing", "required": true, "assigned_worker_id": "home-humanoid-cook-01", "progress_percent": 82, "current_action": "Storing leftovers and verifying appliances are off.", "depends_on": [], "blocked_by": [], "started_at": "2026-08-29T20:10:00-07:00", "expected_completion": "2026-08-29T20:22:00-07:00", "completed_at": null, "evidence_ids": [], "error": null, "permitted_actions": []},
+        {"id": "task_cleanup_furniture", "lane_id": "home", "name": "Restore furniture layout", "capability": "restore_layout", "status": "queued", "required": true, "assigned_worker_id": "home-furniture-01", "progress_percent": 0, "current_action": "Waiting for the Loader Robot to clear the dining area.", "depends_on": ["task_cleanup_clear"], "blocked_by": ["task_cleanup_clear"], "started_at": null, "expected_completion": "2026-08-29T20:32:00-07:00", "completed_at": null, "evidence_ids": [], "error": null, "permitted_actions": []},
+        {"id": "task_cleanup_floor", "lane_id": "home", "name": "Clean floors after reset", "capability": "clean_floor", "status": "queued", "required": true, "assigned_worker_id": "home-roomba-01", "progress_percent": 0, "current_action": "Waiting for dishes and furniture to clear the floor zone.", "depends_on": ["task_cleanup_clear", "task_cleanup_furniture"], "blocked_by": ["task_cleanup_clear", "task_cleanup_furniture"], "started_at": null, "expected_completion": "2026-08-29T20:40:00-07:00", "completed_at": null, "evidence_ids": [], "error": null, "permitted_actions": []},
+        {"id": "task_cleanup_restore_lighting", "lane_id": "home", "name": "Restore evening lighting", "capability": "restore_lighting", "status": "queued", "required": true, "assigned_worker_id": "home-lamp-agent-01", "progress_percent": 0, "current_action": "Waiting for physical cleanup.", "depends_on": ["task_cleanup_floor"], "blocked_by": ["task_cleanup_floor"], "started_at": null, "expected_completion": "2026-08-29T20:41:00-07:00", "completed_at": null, "evidence_ids": [], "error": null, "permitted_actions": []},
+        {"id": "task_cleanup_verify", "lane_id": "home", "name": "Verify restored home", "capability": "verify_outcome", "status": "queued", "required": true, "assigned_worker_id": "home-loader-01", "progress_percent": 0, "current_action": "Waiting for all cleanup work.", "depends_on": ["task_cleanup_kitchen", "task_cleanup_floor", "task_cleanup_restore_lighting"], "blocked_by": ["task_cleanup_kitchen", "task_cleanup_floor", "task_cleanup_restore_lighting"], "started_at": null, "expected_completion": "2026-08-29T20:43:00-07:00", "completed_at": null, "evidence_ids": [], "error": null, "permitted_actions": []}
+      ]
+    }
+  ],
+  "workers": [
+    {"id": "home-roomba-01", "name": "Roomba", "kind": "robot", "status": "waiting", "health": "healthy", "active_assignment": "task_cleanup_floor"},
+    {"id": "home-humanoid-cook-01", "name": "Humanoid Cook", "kind": "robot", "status": "working", "health": "healthy", "active_assignment": "task_cleanup_kitchen"},
+    {"id": "home-loader-01", "name": "Loader Robot", "kind": "robot", "status": "working", "health": "healthy", "active_assignment": "task_cleanup_clear"},
+    {"id": "home-furniture-01", "name": "Furniture Robot", "kind": "robot", "status": "waiting", "health": "healthy", "active_assignment": "task_cleanup_furniture"},
+    {"id": "home-lamp-agent-01", "name": "Lamp Agent", "kind": "ai", "status": "available", "health": "healthy", "active_assignment": null}
+  ],
+  "order": {"id": "order_dinner_12", "status": "consumed", "warehouse_id": "warehouse-oakland-01", "manifest": {"status": "reconciled", "package_count": 3, "weight_kg": 24.5, "volume_l": 72, "refrigeration_required": true, "handling": ["keep_upright", "temperature_controlled"], "evidence_ids": ["ev_home_handoff", "ev_order_reconciled"]}, "substitutions": [], "reconciliation": "matched"},
+  "routing": {"status": "handoff_complete", "selected_worker_id": "delivery-large-01", "selection_reason": "The dinner order required 72 L of capacity and temperature-controlled transport.", "candidates": [{"worker_id": "delivery-small-01", "eligible": false, "reasons": ["Order exceeds 45 L cargo capacity.", "Refrigerated compartment unavailable."]}, {"worker_id": "delivery-large-01", "eligible": true, "reasons": ["80 L cargo capacity available.", "Temperature-controlled transport supported."]}], "reservation": {"worker_id": "delivery-large-01", "status": "released", "reserved_at": "2026-08-29T17:12:00-07:00"}, "eta": "2026-08-29T17:52:00-07:00", "evidence_ids": ["ev_route_selected", "ev_home_handoff"]},
+  "custody": {"current": [{"object_id": "order_dinner_12", "worker_id": "home-humanoid-cook-01", "since": "2026-08-29T17:56:00-07:00"}], "history": [{"id": "custody_003", "object_id": "order_dinner_12", "from_worker_id": "delivery-large-01", "to_worker_id": "home-loader-01", "status": "accepted", "manifest_verified": true, "evidence_ids": ["ev_home_handoff"], "occurred_at": "2026-08-29T17:54:00-07:00"}, {"id": "custody_004", "object_id": "order_dinner_12", "from_worker_id": "home-loader-01", "to_worker_id": "home-humanoid-cook-01", "status": "accepted", "manifest_verified": true, "evidence_ids": ["ev_order_reconciled"], "occurred_at": "2026-08-29T17:56:00-07:00"}]},
+  "attention": null,
+  "permitted_actions": ["report_issue", "cancel_outcome"],
+  "dinner_readiness": {"status": "passed", "passed": 7, "required": 7, "checks": [{"id": "meal_ready", "status": "passed"}, {"id": "places_for_12", "status": "passed"}, {"id": "room_clean", "status": "passed"}, {"id": "layout_safe", "status": "passed"}, {"id": "dinner_lighting", "status": "passed"}, {"id": "dietary_policy", "status": "passed"}, {"id": "order_reconciled", "status": "passed"}]},
+  "cleanup": {"status": "executing", "trigger": "host_confirmation", "started_at": "2026-08-29T20:10:00-07:00", "predicted_completion": "2026-08-29T20:43:00-07:00", "checks": [{"id": "dishes_cleared", "status": "executing"}, {"id": "leftovers_stored", "status": "executing"}, {"id": "cooking_equipment_safe", "status": "executing"}, {"id": "furniture_restored", "status": "queued"}, {"id": "floors_clean", "status": "queued"}, {"id": "lighting_restored", "status": "queued"}, {"id": "final_inspection", "status": "queued"}]},
+  "evidence": [
+    {"id": "ev_cleanup_authorized", "type": "human_attestation", "actor_id": "host-demo", "task_id": null, "object_id": "outcome_dinner_12_cleanup", "summary": "The host confirmed dinner was over and authorized cleanup.", "source": "user_action", "confidence": null, "occurred_at": "2026-08-29T20:10:00-07:00"},
+    {"id": "ev_cleanup_lighting", "type": "robot_telemetry", "actor_id": "home-lamp-agent-01", "task_id": "task_cleanup_lighting", "object_id": "home", "summary": "Cleanup lighting scene activated.", "source": "home_simulator", "confidence": null, "occurred_at": "2026-08-29T20:10:20-07:00"}
+  ],
+  "events": [
+    {"id": "oevt_000080", "sequence": 80, "type": "human.approved", "outcome_id": "outcome_dinner_12_cleanup", "lane_id": "home", "task_id": null, "message": "The host confirmed dinner was over.", "data": {"action": "begin_cleanup"}, "source": "user_action", "occurred_at": "2026-08-29T20:10:00-07:00"},
+    {"id": "oevt_000081", "sequence": 81, "type": "cleanup.started", "outcome_id": "outcome_dinner_12_cleanup", "lane_id": "home", "task_id": null, "message": "Home cleanup began.", "data": {}, "source": "outcome_coordinator", "occurred_at": "2026-08-29T20:10:01-07:00"}
+  ],
+  "created_at": "2026-08-29T16:29:50-07:00",
+  "updated_at": "2026-08-29T20:18:00-07:00"
+}

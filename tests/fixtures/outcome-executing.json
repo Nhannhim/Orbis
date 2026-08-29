@@ -1,0 +1,93 @@
+{
+  "id": "outcome_dinner_12_executing",
+  "plan_id": "plan_dinner_12",
+  "title": "Pasta dinner for 12",
+  "objective": "Prepare a vegetarian pasta dinner for 12 by 7:00 PM and restore the home afterward.",
+  "scenario": "home_dinner",
+  "status": "executing",
+  "phase": "home_preparation",
+  "progress_percent": 36,
+  "deadline": "2026-08-29T19:00:00-07:00",
+  "predicted_completion": "2026-08-29T18:47:00-07:00",
+  "schedule_risk": "on_track",
+  "current_action": "Warehouse picking and Home preparation are running in parallel.",
+  "current_worker_id": "home-loader-01",
+  "next_action": "Consolidate the grocery order after all picking tasks complete.",
+  "blocked_by": [],
+  "lanes": [
+    {
+      "id": "warehouse",
+      "name": "Warehouse",
+      "status": "executing",
+      "progress_percent": 42,
+      "current_task_id": "task_warehouse_pick_refrigerated",
+      "blocked_by": [],
+      "predicted_completion": "2026-08-29T17:14:00-07:00",
+      "tasks": [
+        {"id": "task_warehouse_reserve", "lane_id": "warehouse", "name": "Reserve inventory", "capability": "reserve_inventory", "status": "completed", "required": true, "assigned_worker_id": "warehouse-control", "progress_percent": 100, "current_action": "Inventory reserved.", "depends_on": [], "blocked_by": [], "started_at": "2026-08-29T16:30:00-07:00", "expected_completion": "2026-08-29T16:31:00-07:00", "completed_at": "2026-08-29T16:30:40-07:00", "evidence_ids": ["ev_inventory_reserved"], "error": null, "permitted_actions": []},
+        {"id": "task_warehouse_pick_produce", "lane_id": "warehouse", "name": "Pick produce", "capability": "pick_produce", "status": "completed", "required": true, "assigned_worker_id": "produce-picker-02", "progress_percent": 100, "current_action": "Produce verified.", "depends_on": ["task_warehouse_reserve"], "blocked_by": [], "started_at": "2026-08-29T16:31:00-07:00", "expected_completion": "2026-08-29T16:48:00-07:00", "completed_at": "2026-08-29T16:46:00-07:00", "evidence_ids": ["ev_produce_picked"], "error": null, "permitted_actions": []},
+        {"id": "task_warehouse_pick_dry", "lane_id": "warehouse", "name": "Pick dry goods", "capability": "pick_dry_goods", "status": "completed", "required": true, "assigned_worker_id": "dry-goods-picker-04", "progress_percent": 100, "current_action": "Dry goods verified.", "depends_on": ["task_warehouse_reserve"], "blocked_by": [], "started_at": "2026-08-29T16:31:00-07:00", "expected_completion": "2026-08-29T16:45:00-07:00", "completed_at": "2026-08-29T16:43:00-07:00", "evidence_ids": ["ev_dry_goods_picked"], "error": null, "permitted_actions": []},
+        {"id": "task_warehouse_pick_refrigerated", "lane_id": "warehouse", "name": "Pick refrigerated goods", "capability": "pick_refrigerated", "status": "executing", "required": true, "assigned_worker_id": "cold-storage-picker-01", "progress_percent": 72, "current_action": "Verifying cheese and garlic bread temperatures.", "depends_on": ["task_warehouse_reserve"], "blocked_by": [], "started_at": "2026-08-29T16:31:00-07:00", "expected_completion": "2026-08-29T16:50:00-07:00", "completed_at": null, "evidence_ids": [], "error": null, "permitted_actions": []},
+        {"id": "task_warehouse_consolidate", "lane_id": "warehouse", "name": "Consolidate order", "capability": "consolidate_order", "status": "queued", "required": true, "assigned_worker_id": "packing-arm-01", "progress_percent": 0, "current_action": "Waiting for refrigerated goods.", "depends_on": ["task_warehouse_pick_produce", "task_warehouse_pick_dry", "task_warehouse_pick_refrigerated"], "blocked_by": ["task_warehouse_pick_refrigerated"], "started_at": null, "expected_completion": "2026-08-29T17:00:00-07:00", "completed_at": null, "evidence_ids": [], "error": null, "permitted_actions": []},
+        {"id": "task_warehouse_inspect", "lane_id": "warehouse", "name": "Inspect package", "capability": "inspect_package", "status": "queued", "required": true, "assigned_worker_id": "package-vision-01", "progress_percent": 0, "current_action": "Waiting for consolidation.", "depends_on": ["task_warehouse_consolidate"], "blocked_by": ["task_warehouse_consolidate"], "started_at": null, "expected_completion": "2026-08-29T17:04:00-07:00", "completed_at": null, "evidence_ids": [], "error": null, "permitted_actions": []}
+      ]
+    },
+    {
+      "id": "delivery",
+      "name": "Delivery",
+      "status": "queued",
+      "progress_percent": 0,
+      "current_task_id": "task_delivery_route",
+      "blocked_by": ["task_warehouse_inspect"],
+      "predicted_completion": "2026-08-29T17:55:00-07:00",
+      "tasks": [
+        {"id": "task_delivery_route", "lane_id": "delivery", "name": "Select delivery worker", "capability": "route_delivery", "status": "queued", "required": true, "assigned_worker_id": null, "progress_percent": 0, "current_action": "Waiting for a cleared package manifest.", "depends_on": ["task_warehouse_inspect"], "blocked_by": ["task_warehouse_inspect"], "started_at": null, "expected_completion": "2026-08-29T17:06:00-07:00", "completed_at": null, "evidence_ids": [], "error": null, "permitted_actions": []},
+        {"id": "task_delivery_transit", "lane_id": "delivery", "name": "Deliver groceries", "capability": "deliver_order", "status": "queued", "required": true, "assigned_worker_id": null, "progress_percent": 0, "current_action": "Waiting for routing.", "depends_on": ["task_delivery_route"], "blocked_by": ["task_delivery_route"], "started_at": null, "expected_completion": "2026-08-29T17:50:00-07:00", "completed_at": null, "evidence_ids": [], "error": null, "permitted_actions": []},
+        {"id": "task_delivery_handoff", "lane_id": "delivery", "name": "Transfer custody at home", "capability": "transfer_custody", "status": "queued", "required": true, "assigned_worker_id": "home-loader-01", "progress_percent": 0, "current_action": "Waiting for delivery arrival.", "depends_on": ["task_delivery_transit"], "blocked_by": ["task_delivery_transit"], "started_at": null, "expected_completion": "2026-08-29T17:55:00-07:00", "completed_at": null, "evidence_ids": [], "error": null, "permitted_actions": []}
+      ]
+    },
+    {
+      "id": "home",
+      "name": "Home",
+      "status": "executing",
+      "progress_percent": 38,
+      "current_task_id": "task_home_stage",
+      "blocked_by": [],
+      "predicted_completion": "2026-08-29T18:47:00-07:00",
+      "tasks": [
+        {"id": "task_home_clean_floor", "lane_id": "home", "name": "Clean floors", "capability": "clean_floor", "status": "executing", "required": true, "assigned_worker_id": "home-roomba-01", "progress_percent": 68, "current_action": "Cleaning the dining-room perimeter.", "depends_on": [], "blocked_by": [], "started_at": "2026-08-29T17:00:00-07:00", "expected_completion": "2026-08-29T17:24:00-07:00", "completed_at": null, "evidence_ids": [], "error": null, "permitted_actions": []},
+        {"id": "task_home_stage", "lane_id": "home", "name": "Stage kitchen and dining area", "capability": "stage_kitchen", "status": "executing", "required": true, "assigned_worker_id": "home-loader-01", "progress_percent": 55, "current_action": "Moving cookware and clearing approved surfaces.", "depends_on": [], "blocked_by": [], "started_at": "2026-08-29T17:00:00-07:00", "expected_completion": "2026-08-29T17:28:00-07:00", "completed_at": null, "evidence_ids": [], "error": null, "permitted_actions": []},
+        {"id": "task_home_furniture", "lane_id": "home", "name": "Configure table and chairs", "capability": "configure_table", "status": "executing", "required": true, "assigned_worker_id": "home-furniture-01", "progress_percent": 50, "current_action": "Positioning chair 6 of 12.", "depends_on": [], "blocked_by": [], "started_at": "2026-08-29T17:00:00-07:00", "expected_completion": "2026-08-29T17:22:00-07:00", "completed_at": null, "evidence_ids": [], "error": null, "permitted_actions": []},
+        {"id": "task_home_lighting", "lane_id": "home", "name": "Set preparation lighting", "capability": "set_preparation_lighting", "status": "completed", "required": true, "assigned_worker_id": "home-lamp-agent-01", "progress_percent": 100, "current_action": "Preparation scene active.", "depends_on": [], "blocked_by": [], "started_at": "2026-08-29T17:00:00-07:00", "expected_completion": "2026-08-29T17:02:00-07:00", "completed_at": "2026-08-29T17:01:00-07:00", "evidence_ids": ["ev_prep_lighting"], "error": null, "permitted_actions": []},
+        {"id": "task_home_receive", "lane_id": "home", "name": "Receive grocery delivery", "capability": "receive_delivery", "status": "queued", "required": true, "assigned_worker_id": "home-loader-01", "progress_percent": 0, "current_action": "Waiting for delivery.", "depends_on": ["task_delivery_transit"], "blocked_by": ["task_delivery_transit"], "started_at": null, "expected_completion": "2026-08-29T17:55:00-07:00", "completed_at": null, "evidence_ids": [], "error": null, "permitted_actions": []},
+        {"id": "task_home_cook", "lane_id": "home", "name": "Cook pasta dinner", "capability": "cook_meal", "status": "queued", "required": true, "assigned_worker_id": "home-humanoid-cook-01", "progress_percent": 0, "current_action": "Waiting for accepted ingredient custody.", "depends_on": ["task_home_receive", "task_home_stage"], "blocked_by": ["task_home_receive"], "started_at": null, "expected_completion": "2026-08-29T18:38:00-07:00", "completed_at": null, "evidence_ids": [], "error": null, "permitted_actions": []},
+        {"id": "task_home_verify", "lane_id": "home", "name": "Verify dinner readiness", "capability": "verify_outcome", "status": "queued", "required": true, "assigned_worker_id": "home-humanoid-cook-01", "progress_percent": 0, "current_action": "Waiting for meal and room preparation.", "depends_on": ["task_home_clean_floor", "task_home_furniture", "task_home_cook"], "blocked_by": ["task_home_clean_floor", "task_home_furniture", "task_home_cook"], "started_at": null, "expected_completion": "2026-08-29T18:45:00-07:00", "completed_at": null, "evidence_ids": [], "error": null, "permitted_actions": []}
+      ]
+    }
+  ],
+  "workers": [
+    {"id": "home-roomba-01", "name": "Roomba", "kind": "robot", "subtype": "floor_cleaner", "location": "home.dining_room", "status": "working", "health": "healthy", "capabilities": ["clean_floor", "verify_coverage"], "active_assignment": "task_home_clean_floor", "custody_capable": false, "execution_mode": "simulated", "feed": {"label": "SIMULATED FEED", "src": "/videos/home-cleanliness.mp4"}, "reliability": {"attempts": 1, "completions": 0, "failures": 0, "interventions": 0}},
+    {"id": "home-humanoid-cook-01", "name": "Humanoid Cook", "kind": "robot", "subtype": "general_purpose_humanoid", "location": "home.kitchen", "status": "waiting", "health": "healthy", "capabilities": ["prepare_food", "cook_meal", "plate_meal", "store_leftovers"], "active_assignment": "task_home_cook", "custody_capable": true, "execution_mode": "simulated", "feed": {"label": "SIMULATED FEED", "src": "/videos/home-decoration.mp4"}, "reliability": {"attempts": 0, "completions": 0, "failures": 0, "interventions": 0}},
+    {"id": "home-loader-01", "name": "Loader Robot", "kind": "robot", "subtype": "mobile_manipulator", "location": "home.kitchen", "status": "working", "health": "healthy", "capabilities": ["clear_surfaces", "stage_kitchen", "receive_delivery", "transport_items", "clean_surfaces"], "active_assignment": "task_home_stage", "custody_capable": true, "execution_mode": "simulated", "feed": {"label": "SIMULATED FEED", "src": "/videos/home-table-tasks.mp4"}, "reliability": {"attempts": 1, "completions": 0, "failures": 0, "interventions": 0}},
+    {"id": "home-furniture-01", "name": "Furniture Robot", "kind": "robot", "subtype": "reconfigurable_furniture", "location": "home.dining_room", "status": "working", "health": "healthy", "capabilities": ["configure_table", "position_chairs", "restore_layout"], "active_assignment": "task_home_furniture", "custody_capable": false, "execution_mode": "simulated", "feed": {"label": "SIMULATED FEED", "src": "/videos/home-layout.mp4"}, "reliability": {"attempts": 1, "completions": 0, "failures": 0, "interventions": 0}},
+    {"id": "home-lamp-agent-01", "name": "Lamp Agent", "kind": "ai", "subtype": "connected_lighting_agent", "location": "home", "status": "available", "health": "healthy", "capabilities": ["set_preparation_lighting", "set_dinner_lighting", "set_cleanup_lighting", "restore_lighting"], "active_assignment": null, "custody_capable": false, "execution_mode": "simulated", "feed": {"label": "SIMULATED FEED", "src": "/videos/home-lights.mp4"}, "reliability": {"attempts": 1, "completions": 1, "failures": 0, "interventions": 0}}
+  ],
+  "order": {"id": "order_dinner_12", "status": "picking", "warehouse_id": "warehouse-oakland-01", "currency": "USD", "estimated_total": 86.4, "items_total": 6, "items_picked": 4, "manifest": {"status": "pending", "package_count": 3, "weight_kg": 24.5, "volume_l": 72, "refrigeration_required": true, "handling": ["keep_upright", "temperature_controlled"], "evidence_ids": []}, "substitutions": [], "reconciliation": "pending"},
+  "routing": {"status": "pending", "selected_worker_id": null, "selection_reason": null, "candidates": [], "reservation": null, "eta": null, "evidence_ids": []},
+  "custody": {"current": [{"object_id": "order_dinner_12", "worker_id": "warehouse-control", "since": "2026-08-29T16:30:40-07:00"}], "history": []},
+  "attention": null,
+  "permitted_actions": ["cancel_outcome"],
+  "dinner_readiness": {"status": "pending", "passed": 1, "required": 7, "checks": [{"id": "meal_ready", "status": "pending"}, {"id": "places_for_12", "status": "executing"}, {"id": "room_clean", "status": "executing"}, {"id": "layout_safe", "status": "executing"}, {"id": "dinner_lighting", "status": "pending"}, {"id": "dietary_policy", "status": "passed"}, {"id": "order_reconciled", "status": "pending"}]},
+  "cleanup": {"status": "not_started", "trigger": "host_confirmation", "checks": []},
+  "evidence": [
+    {"id": "ev_inventory_reserved", "type": "policy_decision", "actor_id": "warehouse-control", "task_id": "task_warehouse_reserve", "object_id": "order_dinner_12", "summary": "All required inventory was reserved.", "source": "order_simulator", "confidence": null, "occurred_at": "2026-08-29T16:30:40-07:00"},
+    {"id": "ev_prep_lighting", "type": "robot_telemetry", "actor_id": "home-lamp-agent-01", "task_id": "task_home_lighting", "object_id": "home_dining_room", "summary": "Preparation lighting scene activated.", "source": "home_simulator", "confidence": null, "occurred_at": "2026-08-29T17:01:00-07:00"}
+  ],
+  "events": [
+    {"id": "oevt_000001", "sequence": 1, "type": "plan.approved", "outcome_id": "outcome_dinner_12_executing", "lane_id": null, "task_id": null, "message": "The dinner plan and purchase were approved.", "data": {}, "source": "outcome_coordinator", "occurred_at": "2026-08-29T16:29:50-07:00"},
+    {"id": "oevt_000002", "sequence": 2, "type": "outcome.started", "outcome_id": "outcome_dinner_12_executing", "lane_id": null, "task_id": null, "message": "Warehouse and Home work started in parallel.", "data": {}, "source": "outcome_coordinator", "occurred_at": "2026-08-29T16:30:00-07:00"},
+    {"id": "oevt_000011", "sequence": 11, "type": "task.started", "outcome_id": "outcome_dinner_12_executing", "lane_id": "home", "task_id": "task_home_stage", "message": "Loader Robot began staging the kitchen.", "data": {"worker_id": "home-loader-01"}, "source": "home_simulator", "occurred_at": "2026-08-29T17:00:00-07:00"}
+  ],
+  "created_at": "2026-08-29T16:29:50-07:00",
+  "updated_at": "2026-08-29T17:10:00-07:00"
+}

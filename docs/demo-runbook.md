@@ -1,4 +1,4 @@
-# Orbis Vision Demo Runbook
+# Orbis Demo Runbook
 
 ## Before the demo
 
@@ -18,7 +18,22 @@ ORBIS_VISION_MODE=fixture ./scripts/run-demo
 
 Open [http://localhost:3000/app/demo](http://localhost:3000/app/demo). The UI must say **FIXTURE**. The API reference is at [http://127.0.0.1:8080/api/docs](http://127.0.0.1:8080/api/docs). Stop both services with Control-C.
 
-## Hero story: damaged package
+## Hero story: dinner for twelve
+
+1. Select **Home** on New Task and keep the proposed vegetarian pasta objective.
+2. Select **Create plan**. Review the menu, grocery estimate, workers, parallel schedule, and hard approval gate.
+3. Select **Approve order & start**. Point out that Warehouse and Home preparation start independently.
+4. In the right **Workflow** rail, follow Warehouse and Home branches in parallel. Select any node to highlight its task in the session.
+5. Show the specialized produce, dry-goods, and cold-storage pickers feeding the existing Vision, packing, AMR, and loading workflow.
+6. Show **SIMULATED ROUTING**. The small robot is rejected for volume and refrigeration; the large delivery worker is selected with explicit reasons.
+7. Follow the delivery join: Loader Robot accepts and reconciles grocery custody, then Humanoid Cook receives the ingredients.
+8. End preparation on **Dinner Ready**, including the readiness checklist and accumulated custody/evidence history.
+9. Select **Dinner is over — start cleanup**. Follow Loader, Humanoid Cook, Furniture Robot, Roomba, and Lamp Agent through restoration.
+10. End on **Completed**, where every required cleanup check has proof and the outcome progress is 100%.
+
+The complete fixture story takes about 12 seconds of simulated execution plus presenter time. Videos must remain labeled **SIMULATED FEED** and never advance task state.
+
+## Supporting Vision story: damaged package
 
 1. Select **Damaged package**.
 2. Click **Run demo**.

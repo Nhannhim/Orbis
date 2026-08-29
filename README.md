@@ -1,8 +1,8 @@
 # Orbis
 
-Orbis is a proof-grounded operating layer for physical AI. The Vision demo
-coordinates an AI observer, a human reviewer, autonomous machines, and
-simulated next-mile workers through one auditable package workflow.
+Orbis is a proof-grounded operating layer for physical AI. Its demos coordinate
+AI observers, human reviewers, warehouse machines, delivery workers, and Home
+robots through auditable outcome workflows.
 
 The prototype demonstrates:
 
@@ -16,6 +16,10 @@ The prototype demonstrates:
 - a versioned package world model;
 - an append-only audit trail; and
 - failure containment and operator-triggered recovery.
+
+The Home dinner story adds a dependency-aware three-lane workflow: specialized
+warehouse picking and package handling, capacity-aware delivery, and five Home
+workers preparing dinner for twelve through host-triggered cleanup.
 
 ## Install
 
@@ -70,6 +74,13 @@ cd site && npm run build
 - `POST /api/v1/workflows/{id}/start` — inspect and conditionally release work
 - `POST /api/v1/workflows/{id}/retry` — retry the permitted recovery action
 - `GET /api/v1/workflows/{id}/events` — poll monotonic events
+- `POST /api/v1/outcome-plans` — create a reviewable Home dinner plan
+- `POST /api/v1/outcome-plans/{id}/approve` — approve purchase and execution
+- `POST /api/v1/outcomes/{id}/start` — start Warehouse and Home work in parallel
+- `GET /api/v1/outcomes/{id}` — complete three-lane outcome snapshot
+- `POST /api/v1/outcomes/{id}/actions` — review, recovery, and cleanup actions
+- `GET /api/v1/outcomes/{id}/events` — poll monotonic outcome events
+- `GET /api/v1/home/workers` — the five simulated Home workers
 
 Example:
 
@@ -87,5 +98,6 @@ curl -X POST http://127.0.0.1:8080/api/v1/workflows \
 ```
 
 See the [Vision PRD](docs/vision-subsystem-prd.md), [v1 contract](docs/vision-contract.md),
+[Home dinner contract](docs/home-dinner-contract.md),
 [demo runbook](docs/demo-runbook.md), [protocol draft](docs/physical-agent-protocol.md),
 and [architecture notes](docs/architecture.md).
