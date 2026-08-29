@@ -23,7 +23,7 @@
       "workflow_id": "wf_demo_normal",
       "object_id": "PKG-1042",
       "provider": "fixture",
-      "image_url": "/images/vision/package-normal.png",
+      "image_url": "/images/vision/package-normal.jpg",
       "analysis": {
         "observations": {
           "package_detected": true,

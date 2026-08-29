@@ -117,7 +117,7 @@ An inspection separates immutable provider output from policy and reviews:
   "provider": "fixture",
   "result": {
     "status": "completed",
-    "image_url": "/images/vision/package-damaged.png",
+    "image_url": "/images/vision/package-damaged.jpg",
     "analysis": {
       "observations": {
         "package_detected": true,

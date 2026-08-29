@@ -4,7 +4,7 @@
   "inspection": {
     "id":"insp_demo_uncertain","scenario_id":"uncertain","workflow_id":"wf_demo_uncertain","object_id":"PKG-1043","status":"review_required","attempt":1,"provider":"fixture",
     "result": {
-      "status":"completed","scenario_id":"uncertain","workflow_id":"wf_demo_uncertain","object_id":"PKG-1043","provider":"fixture","image_url":"/images/vision/package-uncertain.png",
+      "status":"completed","scenario_id":"uncertain","workflow_id":"wf_demo_uncertain","object_id":"PKG-1043","provider":"fixture","image_url":"/images/vision/package-uncertain.jpg",
       "analysis": {
         "observations":{"package_detected":true,"package_type":"unknown","size_class":"unknown","visible_damage":"uncertain","damage_indicators":["partially_occluded"],"label_present":true,"label_readable":false},
         "confidence":{"package_type":0.63,"size_class":0.58,"visible_damage":0.61,"label_readable":0.55,"overall":0.66}

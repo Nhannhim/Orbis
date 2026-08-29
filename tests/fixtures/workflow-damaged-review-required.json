@@ -18,7 +18,7 @@
     "attempt": 1,
     "provider": "fixture",
     "result": {
-      "status":"completed","scenario_id":"damaged","workflow_id":"wf_demo_damaged","object_id":"PKG-1042","provider":"fixture","image_url":"/images/vision/package-damaged.png",
+      "status":"completed","scenario_id":"damaged","workflow_id":"wf_demo_damaged","object_id":"PKG-1042","provider":"fixture","image_url":"/images/vision/package-damaged.jpg",
       "analysis": {
         "observations": {"package_detected":true,"package_type":"cardboard_box","size_class":"medium","visible_damage":"severe","damage_indicators":["crushed_corner","torn_sidewall"],"label_present":true,"label_readable":true},
         "confidence": {"package_type":0.98,"size_class":0.94,"visible_damage":0.97,"label_readable":0.98,"overall":0.96}
