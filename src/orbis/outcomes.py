@@ -12,7 +12,7 @@ from dataclasses import dataclass, field
 import hashlib
 import json
 from threading import RLock, Thread
-from time import sleep
+from time import monotonic, sleep
 from typing import Any, Dict, List, Mapping, Optional, Tuple
 from uuid import uuid4
 
@@ -20,6 +20,7 @@ from .coordinator import Coordinator, CoordinatorError
 from .models import utc_now
 from .planning import DinnerPlanner, FixtureDinnerPlanner, PlanningError
 from .task_graph import TaskGraph, TaskGraphError, TaskNode, TaskStatus
+from .outcome_presentation import presentation
 
 
 class OutcomeError(RuntimeError):
@@ -56,6 +57,8 @@ class _OutcomeRecord:
     evidence: List[Dict[str, Any]] = field(default_factory=list)
     started: bool = False
     worker_running: bool = False
+    restart_requested: bool = False
+    warehouse_cursor: int = 0
     created_at: str = field(default_factory=utc_now)
     updated_at: str = field(default_factory=utc_now)
 
@@ -101,22 +104,26 @@ def build_dinner_graph() -> TaskGraph:
             _task("wh_consolidate", "Consolidate order", "warehouse", "consolidate_order", "warehouse-control", ("wh_produce", "wh_dry", "wh_cold")),
             _task("wh_vision", "Inspect package", "warehouse", "inspect_package", "package-vision-01", ("wh_consolidate",), weight=1.4),
             _task("wh_pack", "Pack and verify", "warehouse", "pack_and_verify", "packing-arm-01", ("wh_vision",)),
-            _task("wh_stage", "Move and load order", "warehouse", "stage_delivery", "amr-01", ("wh_pack",)),
+            _task("wh_stage", "Move order to loading", "warehouse", "move_package", "amr-01", ("wh_pack",)),
+            _task("wh_load", "Load delivery order", "warehouse", "load_vehicle", "loading-station-01", ("wh_stage",)),
             _task("delivery_route", "Select delivery worker", "delivery", "recommend_delivery", "orbis-orchestrator", ("wh_vision",)),
-            _task("delivery_transit", "Deliver groceries", "delivery", "last_mile_delivery", "delivery-large-01", ("wh_stage", "delivery_route"), weight=1.5),
+            _task("delivery_transit", "Deliver groceries", "delivery", "last_mile_delivery", "delivery-large-01", ("wh_load", "delivery_route"), weight=1.5),
             _task("home_floors", "Clean floors", "home", "clean_floor", "home-roomba-01"),
             _task("home_stage", "Stage kitchen", "home", "stage_kitchen", "home-loader-01"),
             _task("home_furniture", "Set table and chairs", "home", "configure_table", "home-furniture-01"),
             _task("home_lighting", "Set preparation lighting", "home", "set_preparation_lighting", "home-lamp-agent-01"),
             _task("home_receive", "Receive groceries", "home", "receive_delivery", "home-loader-01", ("delivery_transit", "home_stage"), weight=1.2),
             _task("home_cook", "Cook vegetarian pasta", "home", "cook_meal", "home-humanoid-cook-01", ("home_receive",), weight=2.0),
-            _task("home_verify", "Verify dinner readiness", "home", "verify_dinner", "orbis-orchestrator", ("home_cook", "home_floors", "home_furniture", "home_lighting"), weight=1.2),
+            _task("home_plate", "Plate the meal", "home", "plate_meal", "home-humanoid-cook-01", ("home_cook",)),
+            _task("home_serve", "Serve dinner", "home", "transport_items", "home-loader-01", ("home_plate", "home_furniture")),
+            _task("home_dinner_lighting", "Set dinner lighting", "home", "set_dinner_lighting", "home-lamp-agent-01", ("home_plate", "home_lighting")),
+            _task("home_verify", "Verify dinner readiness", "home", "verify_dinner", "orbis-orchestrator", ("home_serve", "home_floors", "home_furniture", "home_dinner_lighting"), weight=1.2),
             _task("dinner_ready", "Dinner ready", "home", "announce_ready", "orbis-orchestrator", ("home_verify",)),
             _task("cleanup_gate", "Wait for dinner to end", "home", "host_confirmation", "host", ("dinner_ready",), weight=0.2),
             _task("cleanup_surfaces", "Clear and clean surfaces", "home", "clean_surfaces", "home-loader-01", ("cleanup_gate",)),
             _task("cleanup_leftovers", "Store leftovers", "home", "store_leftovers", "home-humanoid-cook-01", ("cleanup_gate",)),
-            _task("cleanup_furniture", "Restore furniture", "home", "restore_layout", "home-furniture-01", ("cleanup_gate",)),
-            _task("cleanup_floors", "Final floor clean", "home", "clean_floor", "home-roomba-01", ("cleanup_surfaces",)),
+            _task("cleanup_furniture", "Restore furniture", "home", "restore_layout", "home-furniture-01", ("cleanup_surfaces", "cleanup_leftovers")),
+            _task("cleanup_floors", "Final floor clean", "home", "clean_floor", "home-roomba-01", ("cleanup_furniture",)),
             _task("cleanup_lighting", "Restore lighting", "home", "restore_lighting", "home-lamp-agent-01", ("cleanup_gate",)),
             _task("cleanup_verify", "Verify home restored", "home", "verify_cleanup", "orbis-orchestrator", ("cleanup_surfaces", "cleanup_leftovers", "cleanup_furniture", "cleanup_floors", "cleanup_lighting"), weight=1.2),
         ]
@@ -132,7 +139,7 @@ class OutcomeCoordinator:
         planner: Optional[DinnerPlanner] = None,
         *,
         background_execution: bool = True,
-        step_delay_seconds: float = 1.5,
+        step_delay_seconds: float = 6.0,
     ) -> None:
         self.warehouse = warehouse
         self.planner = planner or FixtureDinnerPlanner()
@@ -142,6 +149,7 @@ class OutcomeCoordinator:
         self._outcomes: Dict[str, _OutcomeRecord] = {}
         self._events: Dict[str, List[Dict[str, Any]]] = {}
         self._sequence: Dict[str, int] = {}
+        self._snapshots: Dict[str, Dict[int, Dict[str, Any]]] = {}
         self._idempotency: Dict[Tuple[str, str], _IdempotencyEntry] = {}
         self._replays: Dict[Tuple[str, str], bool] = {}
         self._lock = RLock()
@@ -180,11 +188,14 @@ class OutcomeCoordinator:
                 items = deepcopy(order.get("line_items") or [])
                 for item in items:
                     if isinstance(item, dict):
-                        item["quantity"] = f"{item.get('quantity', 1):g} {item.get('unit', '')}".strip()
+                        item["quantity"] = f"{item.get('quantity', 1):g}"
                 order.setdefault("items", items)
                 order.setdefault("estimated_cost", f"${float(order.get('estimated_total') or 0):.2f}")
             value["ready_by"] = value.get("ready_time")
             value["workers"] = self._workers_view()
+            preview_tasks = [self._public_task(task) for task in build_dinner_graph().snapshot()["tasks"]]
+            value["preview_tasks"] = preview_tasks
+            value.update(presentation(preview_tasks, {}, record.updated_at))
             policy_values = value.get("policies") or {}
             if isinstance(policy_values, dict):
                 value["policies"] = [
@@ -288,6 +299,9 @@ class OutcomeCoordinator:
 
         if action == "submit_vision_review":
             self._resolve_vision_review(record, body, request_id)
+        elif action == "retry_task" and record.warehouse_workflow_id:
+            self.warehouse.retry_workflow(record.warehouse_workflow_id, f"{request_id}:warehouse-retry")
+            self._recover_task(record, body, action)
         elif action == "begin_cleanup":
             with self._lock:
                 self._execute_graph_task_locked(record, "cleanup_gate", "host")
@@ -353,7 +367,7 @@ class OutcomeCoordinator:
                 "phase": record.phase,
                 "progress_percent": graph["progress"],
                 "deadline": plan.plan["ready_time"],
-                "predicted_completion": "6:45 PM",
+                "predicted_completion": None,
                 "schedule_risk": "on_track" if not record.attention else "at_risk",
                 "current_action": current["name"] if current else None,
                 "current_worker_id": current_worker_id,
@@ -377,7 +391,31 @@ class OutcomeCoordinator:
                 "execution_mode": "simulated",
                 "created_at": record.created_at,
                 "updated_at": record.updated_at,
+                "latest_sequence": self._sequence.get(record.id, 0),
+                **presentation(tasks, record.routing, record.updated_at),
             }
+
+    def list_outcomes(self) -> Dict[str, Any]:
+        with self._lock:
+            return {"outcomes": [{"id": r.id, "title": self._plan(r.plan_id).plan["title"],
+                "status": r.status, "created_at": r.created_at, "updated_at": r.updated_at}
+                for r in reversed(list(self._outcomes.values()))], "retention": "session_only"}
+
+    def history(self, outcome_id: str) -> Dict[str, Any]:
+        with self._lock:
+            self._outcome(outcome_id)
+            return {"outcome_id": outcome_id, "retention": "session_only", "checkpoints": [
+                {"sequence": e["sequence"], "type": e["type"], "message": e["message"],
+                 "occurred_at": e["occurred_at"], "task_id": e["data"].get("task_id")}
+                for e in self._events[outcome_id]]}
+
+    def snapshot(self, outcome_id: str, sequence: int) -> Dict[str, Any]:
+        with self._lock:
+            self._outcome(outcome_id)
+            value = self._snapshots.get(outcome_id, {}).get(sequence)
+            if value is None:
+                raise OutcomeError("This checkpoint is unavailable in the current session.", "CHECKPOINT_NOT_FOUND", 404)
+            return deepcopy(value)
 
     def events(self, outcome_id: str, after_sequence: int = 0) -> Dict[str, Any]:
         if after_sequence < 0:
@@ -399,7 +437,10 @@ class OutcomeCoordinator:
     # -- Background state machine ----------------------------------------
 
     def _launch_locked(self, record: _OutcomeRecord) -> None:
-        if record.worker_running or record.status in {"cancelled", "completed"}:
+        if record.status in {"cancelled", "completed"}:
+            return
+        if record.worker_running:
+            record.restart_requested = True
             return
         record.worker_running = True
         if self.background_execution:
@@ -416,164 +457,156 @@ class OutcomeCoordinator:
                 self._run_cleanup(record)
             else:
                 self._run_dinner(record)
+        except Exception:
+            with self._lock:
+                record.status = "attention_required"
+                record.attention = {"title": "Execution paused", "message": "A coordination error stopped execution. Cancel this run and start a new session.", "permitted_actions": ["cancel_outcome"]}
+                self._append_event(record, "outcome.execution_error", "Execution stopped safely", {})
+            if not self.background_execution:
+                raise
         finally:
             with self._lock:
                 if outcome_id in self._outcomes:
-                    self._outcomes[outcome_id].worker_running = False
+                    record.worker_running = False
+                    if record.restart_requested:
+                        record.restart_requested = False
+                        self._launch_locked(record)
 
     def _run_dinner(self, record: _OutcomeRecord) -> None:
-        if not self._run_parallel_preparation(record):
+        preparation = ("wh_reserve", "wh_produce", "wh_dry", "wh_cold", "wh_consolidate",
+                       "home_floors", "home_stage", "home_furniture", "home_lighting")
+        if not self._run_group(record, preparation) or not self._run_warehouse(record):
             return
-        if not self._run_warehouse(record):
+        with self._lock:
+            record.phase = "delivery"
+        if not self._run_group(record, ("delivery_route", "delivery_transit", "home_receive",
+                "home_cook", "home_plate", "home_serve", "home_dinner_lighting", "home_verify", "dinner_ready")):
             return
-        for task_id in ("delivery_route", "delivery_transit", "home_receive", "home_cook", "home_verify", "dinner_ready"):
-            if not self._run_task(record, task_id):
-                return
-            if task_id == "delivery_transit":
-                self._handoff(record, "warehouse-control", "delivery-large-01", "grocery_order")
-                self._handoff(record, "delivery-large-01", "home-loader-01", "grocery_order")
-            if task_id == "home_receive":
-                self._handoff(record, "home-loader-01", "home-humanoid-cook-01", "ingredients")
         with self._lock:
             record.status = "dinner_ready"
             record.phase = "dinner_ready"
-            record.updated_at = utc_now()
-            self._append_event(record, "dinner.ready", "Dinner for 12 is ready and verified", {})
+            self._append_event(record, "dinner.ready", "Dinner is served; host confirmation is required before cleanup", {})
 
-    def _run_parallel_preparation(self, record: _OutcomeRecord) -> bool:
-        """Make the Warehouse and Home concurrency visible at presentation pace."""
+    def task_duration(self, task_id: str) -> float:
+        # step_delay_seconds remains an injectable scale; zero makes tests deterministic and fast.
+        seconds = 12 if task_id == "home_cook" else 10 if task_id == "delivery_transit" else 3 if (
+            "lighting" in task_id or "verify" in task_id or task_id in {"dinner_ready", "delivery_route"}
+        ) else 6
+        return seconds * self.step_delay_seconds / 6
 
-        with self._lock:
-            if self._status(record, "wh_consolidate") == "completed":
-                return True
-            initial = (
-                "wh_reserve",
-                "home_floors",
-                "home_stage",
-                "home_furniture",
-                "home_lighting",
-            )
-            for task_id in initial:
-                if not self._begin_task_locked(record, task_id):
+    def _run_group(self, record: _OutcomeRecord, task_ids: Tuple[str, ...]) -> bool:
+        """Start only dependency-ready tasks, reserving each worker until completion."""
+        running: Dict[str, float] = {}
+        while True:
+            with self._lock:
+                if record.status in {"cancelled", "attention_required", "completed"}:
                     return False
-            self._append_event(
-                record,
-                "tasks.parallel_started",
-                "Warehouse reservation and four Home preparation tasks are running in parallel",
-                {"task_ids": list(initial)},
-            )
-
-        self._presentation_pause()
-        with self._lock:
-            self._finish_executing_locked(record, "wh_reserve", "Inventory reserved")
-            self._finish_executing_locked(record, "home_lighting", "Preparation lighting active")
-            pickers = ("wh_produce", "wh_dry", "wh_cold")
-            for task_id in pickers:
-                if not self._begin_task_locked(record, task_id):
-                    return False
-            self._append_event(
-                record,
-                "tasks.parallel_started",
-                "Three specialized pickers joined the ongoing Home preparation",
-                {"task_ids": list(pickers)},
-            )
-
-        self._presentation_pause()
-        with self._lock:
-            self._finish_executing_locked(record, "wh_dry", "Dry goods picked and verified")
-            self._finish_executing_locked(record, "home_stage", "Kitchen staged for delivery")
-
-        self._presentation_pause()
-        with self._lock:
-            self._finish_executing_locked(record, "wh_cold", "Cold-storage items picked and verified")
-            self._finish_executing_locked(record, "home_furniture", "Table and twelve chairs positioned safely")
-
-        self._presentation_pause()
-        with self._lock:
-            self._finish_executing_locked(record, "wh_produce", "Produce picked and verified")
-            self._finish_executing_locked(record, "home_floors", "Dining-area floor coverage verified")
-        return self._run_task(record, "wh_consolidate")
+                pending = [tid for tid in task_ids if self._status(record, tid) != "completed"]
+                if not pending:
+                    return True
+                occupied = {record.graph.task(tid)["metadata"]["proposed_worker_id"] for tid in running}
+                for tid in pending:
+                    task = record.graph.task(tid)
+                    worker = task["metadata"]["proposed_worker_id"]
+                    if tid not in running and task["status"] == "ready" and worker not in occupied:
+                        if tid.startswith("home_") and tid not in {"home_floors", "home_stage", "home_furniture", "home_lighting"}:
+                            record.phase = "cooking"
+                        self._begin_task_locked(record, tid)
+                        running[tid] = monotonic() + self.task_duration(tid)
+                        occupied.add(worker)
+                for tid, deadline in list(running.items()):
+                    if monotonic() >= deadline:
+                        self._finish_executing_locked(record, tid, "Simulated assignment completed")
+                        del running[tid]
+                        if tid == "delivery_route":
+                            record.routing = self._initial_routing(self._plan(record.plan_id).plan)
+                            record.routing["status"] = "selected"
+                            record.routing["selected_worker_id"] = "delivery-large-01"
+                            for candidate in record.routing["candidates"]:
+                                candidate["selected"] = candidate["worker_id"] == "delivery-large-01"
+                            self._append_event(record, "routing.selected", "Large Delivery Robot recommended from manifest and fleet constraints", record.routing)
+                        elif tid == "delivery_transit":
+                            self._handoff(record, "warehouse-control", "delivery-large-01", "grocery_order")
+                            self._handoff(record, "delivery-large-01", "home-loader-01", "grocery_order")
+                        elif tid == "home_receive":
+                            self._handoff(record, "home-loader-01", "home-humanoid-cook-01", "ingredients")
+                if not running and not any(self._status(record, tid) == "ready" for tid in pending):
+                    return all(self._status(record, tid) == "completed" for tid in task_ids)
+            if self.step_delay_seconds:
+                sleep(min(0.1, self.step_delay_seconds))
 
     def _run_warehouse(self, record: _OutcomeRecord) -> bool:
         with self._lock:
-            if self._status(record, "wh_vision") == "completed":
+            if self._status(record, "wh_load") == "completed":
                 return True
-            plan = self._plan(record.plan_id).plan
-            scenario_id = str(plan.get("scenario_id") or "normal")
             if not record.warehouse_workflow_id:
-                workflow = self.warehouse.create_workflow(
-                    {
-                        "order_id": f"order-{record.id[-6:]}",
-                        "package_id": f"pkg-{record.id[-6:]}",
-                        "destination": "Home dining room",
-                        "scenario_id": scenario_id,
-                        "auto_start": False,
-                    },
-                    f"{record.id}:warehouse:create",
-                )
+                workflow = self.warehouse.create_workflow({
+                    "order_id": f"order-{record.id[-6:]}", "package_id": f"pkg-{record.id[-6:]}",
+                    "destination": "Home dining room",
+                    "scenario_id": str(self._plan(record.plan_id).plan.get("scenario_id") or "normal"),
+                    "auto_start": False,
+                }, f"{record.id}:warehouse:create")
                 record.warehouse_workflow_id = workflow["id"]
-                self._set_executing_locked(record, "wh_vision")
-                workflow_id = workflow["id"]
-            else:
-                workflow_id = record.warehouse_workflow_id
-                self._set_executing_locked(record, "wh_vision")
+            workflow_id = record.warehouse_workflow_id
+            self._begin_task_locked(record, "wh_vision")
         try:
-            warehouse = self.warehouse.start_workflow(workflow_id, f"{record.id}:warehouse:start")
+            self.warehouse.start_workflow(workflow_id, f"{record.id}:warehouse:start")
         except CoordinatorError as exc:
             if exc.code != "WORKFLOW_ALREADY_STARTED":
                 self._warehouse_attention(record, str(exc), exc.code)
                 return False
+        deadline = monotonic() + 180
+        while monotonic() < deadline:
             warehouse = self.warehouse.get_workflow(workflow_id)
-        if warehouse["status"] == "attention_required":
-            self._warehouse_attention(record, "Package inspection requires human review.", "VISION_REVIEW_REQUIRED")
-            return False
-        if warehouse["status"] in {"failed", "service_unavailable"}:
-            self._warehouse_attention(record, "Vision service is unavailable; no work was dispatched.", "VISION_SERVICE_UNAVAILABLE")
-            return False
-        with self._lock:
-            self._finish_executing_locked(record, "wh_vision", "Vision policy cleared the package")
-            self._set_executing_locked(record, "wh_pack")
-        # The physical simulator intentionally makes custody handoffs visible.
-        # Keep that timing independent from the much shorter outcome-task delay
-        # used by unit tests and UI animation.
-        for _ in range(160):
-            warehouse = self.warehouse.get_workflow(workflow_id)
-            if warehouse["status"] == "completed":
-                with self._lock:
-                    self._finish_executing_locked(record, "wh_pack", "Physical packing completed")
-                    self._execute_graph_task_locked(record, "wh_stage", "warehouse")
-                return True
-            if warehouse["status"] in {"attention_required", "failed"}:
-                self._warehouse_attention(record, "Warehouse execution needs attention.", "WAREHOUSE_ATTENTION")
+            gate = warehouse.get("vision_gate") or {}
+            with self._lock:
+                if record.status == "cancelled":
+                    return False
+                # The returned start request is not clearance. Only the policy gate is.
+                if gate.get("cleared") and self._status(record, "wh_vision") != "completed":
+                    self._finish_executing_locked(record, "wh_vision", "Deterministic vision policy cleared the package")
+                for tid, physical in zip(("wh_pack", "wh_stage", "wh_load"), warehouse.get("steps", [])):
+                    state = physical["status"]
+                    current = self._status(record, tid)
+                    if state in {"reserved", "executing", "verifying", "completed"} and current != "completed":
+                        if current == "ready":
+                            record.graph.reserve(tid, record.graph.task(tid)["metadata"]["proposed_worker_id"])
+                            self._append_event(record, "physical.reserved", f"{physical['name']} reserved", {"task_id": tid, "physical_step_id": physical["id"]})
+                        if state in {"executing", "verifying", "completed"} and self._status(record, tid) == "reserved":
+                            record.graph.start(tid)
+                            self._append_event(record, "physical.executing", f"{physical['name']} executing", {"task_id": tid})
+                        if state in {"verifying", "completed"} and self._status(record, tid) == "executing":
+                            record.graph.begin_verification(tid)
+                            self._append_event(record, "physical.verifying", f"{physical['name']} verifying", {"task_id": tid})
+                        if state == "completed":
+                            self._finish_executing_locked(record, tid, "Confirmed by physical engine evidence and custody")
+                for event in warehouse.get("events", []):
+                    sequence = int(event.get("sequence") or 0)
+                    if sequence > record.warehouse_cursor:
+                        record.warehouse_cursor = sequence
+                        self._append_event(record, "warehouse." + event["type"], event.get("message", "Warehouse event"), {
+                            "source_sequence": sequence, "source_event": event})
+                if warehouse["status"] == "completed":
+                    return self._status(record, "wh_load") == "completed"
+            if gate.get("state") == "service_unavailable" or gate.get("error"):
+                self._warehouse_attention(record, "Vision is unavailable. Retry inspection; no downstream work is released.", "VISION_SERVICE_UNAVAILABLE")
                 return False
-            sleep(max(0.05, self.step_delay_seconds))
-        self._warehouse_attention(record, "Warehouse execution did not finish in the demo window.", "WAREHOUSE_TIMEOUT")
+            if warehouse["status"] in {"attention_required", "failed", "cancelled"}:
+                code = "VISION_REVIEW_REQUIRED" if not gate.get("cleared") else "WAREHOUSE_ATTENTION"
+                self._warehouse_attention(record, "Package review is required." if code == "VISION_REVIEW_REQUIRED" else "Physical execution needs attention.", code)
+                return False
+            sleep(0.05)
+        self._warehouse_attention(record, "Warehouse execution timed out.", "WAREHOUSE_TIMEOUT")
         return False
 
     def _run_cleanup(self, record: _OutcomeRecord) -> None:
-        for task_id in ("cleanup_surfaces", "cleanup_leftovers", "cleanup_furniture", "cleanup_lighting", "cleanup_floors", "cleanup_verify"):
-            if not self._run_task(record, task_id):
-                return
+        if not self._run_group(record, ("cleanup_surfaces", "cleanup_leftovers", "cleanup_furniture",
+                                       "cleanup_lighting", "cleanup_floors", "cleanup_verify")):
+            return
         with self._lock:
             record.status = "completed"
             record.phase = "completed"
-            record.updated_at = utc_now()
             self._append_event(record, "outcome.completed", "Dinner and home restoration completed", {})
-
-    def _run_task(self, record: _OutcomeRecord, task_id: str) -> bool:
-        with self._lock:
-            status = self._status(record, task_id)
-            if status == "completed":
-                return True
-            if status not in {"ready", "reserved", "executing", "verifying"}:
-                return False
-            self._set_executing_locked(record, task_id)
-            task = record.graph.task(task_id)
-            self._append_event(record, "task.started", f"{task['name']} started", {"task_id": task_id, "lane": task["lane"]})
-        sleep(self.step_delay_seconds)
-        with self._lock:
-            self._finish_executing_locked(record, task_id, "Simulated task completion verified")
-        return True
 
     def _begin_task_locked(self, record: _OutcomeRecord, task_id: str) -> bool:
         status = self._status(record, task_id)
@@ -616,6 +649,11 @@ class OutcomeCoordinator:
         }
         self.warehouse.review_inspection(inspection_id, review, f"{request_id}:vision-review")
         with self._lock:
+            if review["resolution"] == "rejected":
+                record.status = "cancelled"
+                record.attention = None
+                self._append_event(record, "outcome.rejected", "Inspector rejected the package; dinner workflow stopped", {})
+                return
             try:
                 record.graph.recover("wh_vision", "Human inspection resolved package condition", evidence=[{"kind": "human_review", "actor_id": review["reviewer_id"], "notes": review["notes"]}])
             except TaskGraphError as exc:
@@ -642,10 +680,12 @@ class OutcomeCoordinator:
 
     def _warehouse_attention(self, record: _OutcomeRecord, message: str, code: str) -> None:
         with self._lock:
-            status = self._status(record, "wh_vision")
+            target = "wh_vision" if self._status(record, "wh_vision") != "completed" else next((tid for tid in ("wh_pack", "wh_stage", "wh_load") if self._status(record, tid) != "completed"), "wh_load")
+            actions = ["submit_vision_review", "cancel_outcome"] if code == "VISION_REVIEW_REQUIRED" else ["retry_task", "cancel_outcome"]
+            status = self._status(record, target)
             if status not in {"attention_required", "completed"}:
                 try:
-                    record.graph.require_attention("wh_vision", message, ["submit_vision_review", "retry_task", "cancel_outcome"], "vision")
+                    record.graph.require_attention(target, message, actions, "warehouse")
                 except TaskGraphError:
                     pass
             record.status = "attention_required"
@@ -653,18 +693,18 @@ class OutcomeCoordinator:
                 "id": f"attn_{uuid4().hex[:10]}",
                 "severity": "warning",
                 "code": code,
-                "title": "Package needs review",
+                "title": "Package needs review" if code == "VISION_REVIEW_REQUIRED" else "Execution paused",
                 "message": message,
-                "task_id": "wh_vision",
+                "task_id": target,
                 "affected_task_ids": ["wh_vision", "wh_pack", "wh_stage", "delivery_transit", "home_receive", "home_cook"],
                 "continuing_task_ids": ["home_floors", "home_stage", "home_furniture", "home_lighting"],
                 "blocking": True,
-                "permitted_actions": ["submit_vision_review", "cancel_outcome"],
+                "permitted_actions": actions,
                 "raised_at": utc_now(),
             }
             record.attention["affected_tasks"] = deepcopy(record.attention["affected_task_ids"])
             record.attention["continuing_tasks"] = deepcopy(record.attention["continuing_task_ids"])
-            self._append_event(record, "outcome.attention_required", message, {"code": code, "task_id": "wh_vision"})
+            self._append_event(record, "outcome.attention_required", message, {"code": code, "task_id": target})
 
     def _set_executing_locked(self, record: _OutcomeRecord, task_id: str) -> None:
         status = self._status(record, task_id)
@@ -750,14 +790,14 @@ class OutcomeCoordinator:
         if refrigerated:
             small_reasons.append("Temperature-controlled delivery is required")
         return {
-            "status": "selected",
+            "status": "pending",
             "label": "SIMULATED ROUTING",
-            "selected_worker_id": "delivery-large-01",
+            "selected_worker_id": None,
             "selection_reason": "Large delivery worker satisfies volume and refrigeration constraints.",
             "eta": "5:50 PM",
             "candidates": [
                 {"worker_id": "delivery-small-01", "name": "Small Delivery Robot", "eligible": not small_reasons, "selected": False, "reasons": small_reasons or ["Compatible"]},
-                {"worker_id": "delivery-large-01", "name": "Large Delivery Robot", "eligible": True, "selected": True, "reasons": ["72 L capacity", "Temperature controlled", "Deadline compatible"]},
+                {"worker_id": "delivery-large-01", "name": "Large Delivery Robot", "eligible": True, "selected": False, "reasons": ["72 L capacity", "Temperature controlled", "Deadline compatible"]},
             ],
         }
 
@@ -778,10 +818,10 @@ class OutcomeCoordinator:
     @staticmethod
     def _readiness_view(tasks: List[Dict[str, Any]]) -> Dict[str, Any]:
         mapping = {
-            "meal_ready": "home_cook",
+            "meal_served": "home_serve",
             "places_for_12": "home_furniture",
             "room_clean": "home_floors",
-            "dinner_lighting": "home_lighting",
+            "dinner_lighting": "home_dinner_lighting",
             "order_reconciled": "home_receive",
             "final_verification": "home_verify",
         }
@@ -873,11 +913,17 @@ class OutcomeCoordinator:
         return []
 
     def _append_event(self, record: _OutcomeRecord, event_type: str, message: str, data: Mapping[str, Any]) -> None:
+        record.updated_at = utc_now()
         sequence = self._sequence.get(record.id, 0) + 1
         self._sequence[record.id] = sequence
         self._events.setdefault(record.id, []).append(
             {"id": f"evt_{uuid4().hex[:12]}", "outcome_id": record.id, "sequence": sequence, "type": event_type, "message": message, "data": deepcopy(dict(data)), "occurred_at": utc_now()}
         )
+        snapshot = self.get_outcome(record.id)
+        snapshot["historical"] = True
+        snapshot["checkpoint_time"] = record.updated_at
+        snapshot["permitted_actions"] = []
+        self._snapshots.setdefault(record.id, {})[sequence] = deepcopy(snapshot)
 
     def _plan(self, plan_id: str) -> _PlanRecord:
         try:
@@ -889,7 +935,7 @@ class OutcomeCoordinator:
         try:
             return self._outcomes[outcome_id]
         except KeyError as exc:
-            raise OutcomeError(f"Outcome {outcome_id} was not found.", "OUTCOME_NOT_FOUND", 404) from exc
+            raise OutcomeError("This Home session has expired or is unavailable. Sessions are cleared when the backend restarts.", "OUTCOME_NOT_FOUND", 404) from exc
 
     @staticmethod
     def _fingerprint(payload: Mapping[str, Any]) -> str:

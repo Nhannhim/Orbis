@@ -481,6 +481,18 @@ def create_app(
             outcome_coordinator, "approve_plan", body.request_id, result, 201
         )
 
+    @app.get("/api/v1/outcomes")
+    def list_outcomes() -> Dict[str, Any]:
+        return outcome_coordinator.list_outcomes()
+
+    @app.get("/api/v1/outcomes/{outcome_id}/history")
+    def outcome_history(outcome_id: str) -> Dict[str, Any]:
+        return outcome_coordinator.history(outcome_id)
+
+    @app.get("/api/v1/outcomes/{outcome_id}/snapshots/{sequence}")
+    def outcome_snapshot(outcome_id: str, sequence: int) -> Dict[str, Any]:
+        return outcome_coordinator.snapshot(outcome_id, sequence)
+
     @app.get("/api/v1/outcomes/{outcome_id}")
     def get_outcome(outcome_id: str) -> Dict[str, Any]:
         return outcome_coordinator.get_outcome(outcome_id)

@@ -102,7 +102,66 @@ class OutcomeCoordinatorTests(unittest.TestCase):
             "req-review",
         )
         self.assertEqual("dinner_ready", ready["status"])
-        self.assertTrue(any(event["type"] == "vision.review_resolved" for event in ready["events"]))
+        self.assertTrue(any(event["type"] == "vision.review_resolved" for event in self.coordinator.events(outcome["id"])["events"]))
+
+    def test_history_is_detached_and_has_media_provenance(self):
+        outcome = self.create_approved()
+        before = self.coordinator.snapshot(outcome["id"], 1)
+        self.coordinator.start_outcome(outcome["id"], {}, "history-start")
+        after = self.coordinator.snapshot(outcome["id"], 1)
+        self.assertEqual(before, after)
+        self.assertEqual("scheduled", after["status"])
+        self.assertEqual([], after["permitted_actions"])
+        after["tasks"][0]["status"] = "tampered"
+        self.assertNotEqual("tampered", self.coordinator.snapshot(outcome["id"], 1)["tasks"][0]["status"])
+        ready = self.coordinator.get_outcome(outcome["id"])
+        self.assertEqual("synthetic_illustration", ready["milestone_images"]["dinner_ready"]["kind"])
+        self.assertNotIn("home_restored", ready["milestone_images"])
+        self.assertEqual("unavailable", ready["media"]["home_plate"]["kind"])
+        self.assertEqual(ready["latest_sequence"], len(self.coordinator.history(outcome["id"])["checkpoints"]))
+        self.assertEqual(1, len(self.coordinator.list_outcomes()["outcomes"]))
+
+    def test_dependencies_worker_exclusion_and_physical_states_at_every_checkpoint(self):
+        outcome = self.create_approved()
+        self.coordinator.start_outcome(outcome["id"], {}, "graph-start")
+        self.coordinator.apply_action(outcome["id"], {"action": "begin_cleanup"}, "graph-clean")
+        physical_states = set()
+        for checkpoint in self.coordinator.history(outcome["id"])["checkpoints"]:
+            state = self.coordinator.snapshot(outcome["id"], checkpoint["sequence"])
+            tasks = {t["id"]: t for t in state["tasks"]}
+            active_workers = []
+            for task in tasks.values():
+                if task["status"] in {"reserved", "executing", "verifying"}:
+                    active_workers.append(task["assigned_worker_id"])
+                    self.assertTrue(all(tasks[d]["status"] == "completed" for d in task["dependencies"]))
+                if task["id"] == "wh_stage":
+                    physical_states.add(task["status"])
+            self.assertEqual(len(active_workers), len(set(active_workers)))
+        self.assertTrue({"reserved", "executing", "verifying", "completed"} <= physical_states)
+        final = self.coordinator.get_outcome(outcome["id"])
+        self.assertIn("home_restored", final["milestone_images"])
+        tasks = {t["id"]: t for t in final["tasks"]}
+        self.assertEqual(["home_cook"], tasks["home_plate"]["dependencies"])
+        self.assertIn("home_plate", tasks["home_serve"]["dependencies"])
+        self.assertIn("home_serve", tasks["home_verify"]["dependencies"])
+        self.assertEqual(["cleanup_furniture"], tasks["cleanup_floors"]["dependencies"])
+
+    def test_default_pacing_and_restart_retention(self):
+        coordinator = OutcomeCoordinator(self.coordinator.warehouse)
+        self.assertEqual(6, coordinator.task_duration("home_plate"))
+        self.assertEqual(12, coordinator.task_duration("home_cook"))
+        self.assertEqual(10, coordinator.task_duration("delivery_transit"))
+        self.assertEqual(3, coordinator.task_duration("cleanup_verify"))
+        with self.assertRaises(OutcomeError) as raised:
+            coordinator.snapshot("expired-run", 1)
+        self.assertIn("expired", str(raised.exception))
+
+    def test_rejected_review_stops_the_outcome(self):
+        outcome = self.create_approved()
+        self.coordinator.start_outcome(outcome["id"], {"scenario_id": "damaged"}, "reject-start")
+        rejected = self.coordinator.apply_action(outcome["id"], {"action": "submit_vision_review", "parameters": {"disposition": "rejected"}}, "reject")
+        self.assertEqual("cancelled", rejected["status"])
+        self.assertNotEqual("completed", next(t for t in rejected["tasks"] if t["id"] == "wh_pack")["status"])
 
     def test_idempotency_and_event_cursor(self):
         body = {"objective": "Vegetarian pasta dinner for 12"}

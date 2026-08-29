@@ -149,6 +149,7 @@ export type OutcomeOrderItemView = {
 };
 
 export type OutcomePlanView = {
+  preview?: OutcomeView;
   id: string;
   status: 'draft' | 'generating' | 'awaiting_approval' | 'approved' | 'rejected' | 'invalid';
   title: string;
@@ -167,6 +168,12 @@ export type OutcomePlanView = {
 };
 
 export type OutcomeView = {
+  phaseGroups: OutcomePhaseGroup[];
+  media: Record<string, OutcomeMedia>;
+  milestoneImages: Record<string, OutcomeMedia>;
+  latestSequence: number;
+  historical: boolean;
+  checkpointTime?: string;
   id: string;
   planId?: string;
   title: string;
@@ -196,6 +203,11 @@ export type OutcomeView = {
   createdAt?: string;
   updatedAt?: string;
 };
+
+export type OutcomePhaseGroup = { id: string; title: string; taskIds: string[]; status: string; completedCount: number; taskCount: number };
+export type OutcomeMedia = { id: string; taskId: string; kind: 'simulated_video_frame' | 'synthetic_illustration' | 'unavailable'; imageUrl?: string; videoUrl?: string; sourceClip?: string; offsetSeconds?: number; checkpointTime?: string; reason?: string };
+export type OutcomeCheckpoint = { sequence: number; type: string; message: string; occurredAt: string; taskId?: string };
+export type OutcomeSummary = { id: string; title: string; status: string; updatedAt: string };
 
 export type OutcomeActionKind =
   | 'approve_substitution'
@@ -360,6 +372,7 @@ export function normalizeOutcomePlan(payload: unknown): OutcomePlanView {
     ? list(root.schedule ?? root.milestones)
     : list(root.proposed_lanes).map((lane) => ({ id: record(lane).id, label: record(lane).name, time: record(lane).starts_at, detail: record(lane).summary }));
   return {
+    preview: normalizeOutcome({ ...root, status: 'scheduled', phase: 'planning', lanes: ['warehouse', 'delivery', 'home'].map(id => ({ id, tasks: list(root.preview_tasks).filter(t => record(t).lane === id) })) }),
     id: string(root.id, string(root.plan_id)),
     status: enumValue(root.status, ['draft', 'generating', 'awaiting_approval', 'approved', 'rejected', 'invalid'] as const, 'awaiting_approval'),
     title: string(root.title, 'Dinner for 12'),
@@ -399,6 +412,12 @@ export function normalizeOutcome(payload: unknown): OutcomeView {
   const checklist = record(root.checklists);
 
   return {
+    phaseGroups: list(root.phase_groups).map(value => { const g = record(value); return { id: string(g.id), title: string(g.title), taskIds: strings(g.task_ids), status: string(g.status), completedCount: number(g.completed_count), taskCount: number(g.task_count) }; }),
+    media: normalizeMediaMap(root.media),
+    milestoneImages: normalizeMediaMap(root.milestone_images),
+    latestSequence: number(root.latest_sequence),
+    historical: bool(root.historical),
+    checkpointTime: string(root.checkpoint_time) || undefined,
     id: string(root.id, string(root.outcome_id)),
     planId: string(root.plan_id) || undefined,
     title: string(root.title, 'Dinner for 12'),
@@ -493,6 +512,27 @@ export function normalizeOutcome(payload: unknown): OutcomeView {
     createdAt: string(root.created_at) || undefined,
     updatedAt: string(root.updated_at) || undefined,
   };
+}
+
+function normalizeMediaMap(value: unknown): Record<string, OutcomeMedia> {
+  return Object.fromEntries(Object.entries(record(value)).map(([key, raw]) => {
+    const m = record(raw);
+    return [key, { id: string(m.id), taskId: string(m.task_id), kind: enumValue(m.kind, ['simulated_video_frame', 'synthetic_illustration', 'unavailable'] as const, 'unavailable'), imageUrl: string(m.image_url) || undefined, videoUrl: string(m.video_url) || undefined, sourceClip: string(m.source_clip) || undefined, offsetSeconds: number(m.offset_seconds), checkpointTime: string(m.checkpoint_time) || undefined, reason: string(m.reason) || undefined }];
+  }));
+}
+
+export async function listOutcomes(): Promise<OutcomeSummary[]> {
+  const payload = record(await requestJson('/api/v1/outcomes'));
+  return list(payload.outcomes).map(value => { const r = record(value); return { id: string(r.id), title: string(r.title), status: string(r.status), updatedAt: string(r.updated_at) }; });
+}
+
+export async function getOutcomeHistory(id: string): Promise<OutcomeCheckpoint[]> {
+  const payload = record(await requestJson(`/api/v1/outcomes/${encodeURIComponent(id)}/history`));
+  return list(payload.checkpoints).map(value => { const c = record(value); return { sequence: number(c.sequence), type: string(c.type), message: string(c.message), occurredAt: string(c.occurred_at), taskId: string(c.task_id) || undefined }; });
+}
+
+export async function getOutcomeSnapshot(id: string, sequence: number): Promise<OutcomeView> {
+  return normalizeOutcome(await requestJson(`/api/v1/outcomes/${encodeURIComponent(id)}/snapshots/${sequence}`));
 }
 
 function normalizeChecklistItem(value: unknown, index: number): OutcomeChecklistItem {
