@@ -17,35 +17,33 @@ import {
   UtensilsCrossed,
   Warehouse,
 } from 'lucide-react';
+import { MachineGallery } from '@/components/machine-gallery';
 import { OrbisMark } from '@/components/orbis-mark';
 
-function CoordinationField() {
+function ProcessVideo({
+  src,
+  poster,
+  label,
+  className = '',
+}: {
+  src: string;
+  poster: string;
+  label: string;
+  className?: string;
+}) {
   return (
-    <div className="coordination-field" aria-label="A package moving through an orchestrated warehouse network">
-      <div className="field-orbit field-orbit--one" />
-      <div className="field-orbit field-orbit--two" />
-      <div className="field-path field-path--one" />
-      <div className="field-path field-path--two" />
-
-      <div className="field-node field-node--origin">
-        <span className="field-node-icon"><Box size={17} strokeWidth={1.6} /></span>
-        <span><strong>Packing cell</strong><small>Object verified</small></span>
-      </div>
-      <div className="field-node field-node--moving">
-        <span className="field-node-icon"><ScanLine size={17} strokeWidth={1.6} /></span>
-        <span><strong>Mobile robot</strong><small>Custody accepted</small></span>
-      </div>
-      <div className="field-node field-node--destination">
-        <span className="field-node-icon"><Truck size={17} strokeWidth={1.6} /></span>
-        <span><strong>Outbound vehicle</strong><small>Ready at dock 04</small></span>
-      </div>
-
-      <div className="field-object">
-        <span>PKG</span>
-        <strong>1042</strong>
-      </div>
-
-      <div className="field-status"><span /> Orchestration active</div>
+    <div className={`process-video ${className}`}>
+      <video
+        aria-label={label}
+        autoPlay
+        loop
+        muted
+        playsInline
+        poster={poster}
+        preload="metadata"
+      >
+        <source src={src} type="video/mp4" />
+      </video>
     </div>
   );
 }
@@ -87,7 +85,23 @@ export default function Home() {
             <a className="text-link" href="#system">See how it works</a>
           </div>
         </div>
-        <CoordinationField />
+        <div className="hero-world" aria-label="A continuous physical world coordinated by Orbis">
+          <ProcessVideo
+            className="hero-world-video"
+            label="A parcel moving from a warehouse network into a coordinated smart home world"
+            poster="/images/orbis-warehouse-journey.jpg"
+            src="/videos/hero-spatial-world.mp4"
+          />
+          <div className="hero-world-topline">
+            <span>ORBIS SPATIAL WORLD / LIVE</span>
+            <span><i /> 11 AGENTS COORDINATED</span>
+          </div>
+          <div className="hero-world-objective">
+            <span>ACTIVE OBJECTIVE</span>
+            <strong>Package-to-porch · room-to-ready</strong>
+          </div>
+          <div className="hero-world-scan" />
+        </div>
       </section>
 
       <section className="statement-band" id="system">
@@ -111,13 +125,14 @@ export default function Home() {
         </div>
         <div className="system-steps">
           {[
-            ['01', 'Observe', 'Machines ground every action in live sensor and vision data.'],
-            ['02', 'Coordinate', 'The orchestrator assigns goals by capability, state, and policy.'],
-            ['03', 'Verify', 'Evidence proves the physical outcome before responsibility moves.'],
-            ['04', 'Handoff', 'The next agent accepts the object, context, and chain of custody.'],
-          ].map(([number, title, description]) => (
+            ['01', 'Observe', 'Machines ground every action in live sensor and vision data.', '/videos/system-observe.mp4', '/images/orbis-warehouse-journey.jpg'],
+            ['02', 'Coordinate', 'The orchestrator assigns goals by capability, state, and policy.', '/videos/system-coordinate.mp4', '/images/orbis-home-dinner-reset.jpg'],
+            ['03', 'Verify', 'Evidence proves the physical outcome before responsibility moves.', '/videos/system-verify.mp4', '/images/orbis-warehouse-journey.jpg'],
+            ['04', 'Handoff', 'The next agent accepts the object, context, and chain of custody.', '/videos/system-handoff.mp4', '/images/orbis-warehouse-journey.jpg'],
+          ].map(([number, title, description, video, poster]) => (
             <article key={number}>
               <span>{number}</span>
+              <ProcessVideo className="system-step-video" label={`${title}: ${description}`} poster={poster} src={video} />
               <h3>{title}</h3>
               <p>{description}</p>
             </article>
@@ -188,7 +203,7 @@ export default function Home() {
               />
               <div className="use-case-media-topline">
                 <span>GENERATED WORLD / WAREHOUSE TO DOORSTEP</span>
-                <span><Play size={11} fill="currentColor" /> Motion-ready scene</span>
+                <span><Play size={11} fill="currentColor" /> Video reference world</span>
               </div>
               <div className="use-case-media-caption">
                 <span><i /> ORD-1042</span>
@@ -215,11 +230,11 @@ export default function Home() {
               </div>
 
               <ol className="journey-grid">
-                <li><span>01</span><Box /><strong>Pick</strong><p>A mobile robot identifies and lifts the parcel.</p></li>
-                <li><span>02</span><PackageCheck /><strong>Pack</strong><p>The packing arm seals, weighs, and verifies it.</p></li>
-                <li><span>03</span><Truck /><strong>Linehaul</strong><p>The dock loads the truck and signs custody over.</p></li>
-                <li><span>04</span><Route /><strong>Autonomous road</strong><p>A Waymo-class vehicle accepts the final-mile route.</p></li>
-                <li><span>05</span><House /><strong>Doorstep</strong><p>The delivery robot places it on the porch and proves arrival.</p></li>
+                <li><span>01</span><Box /><ProcessVideo className="step-video" label="Warehouse robot identifies and lifts the parcel" poster="/images/orbis-warehouse-journey.jpg" src="/videos/warehouse-pick.mp4" /><strong>Pick</strong><p>A mobile robot identifies and lifts the parcel.</p></li>
+                <li><span>02</span><PackageCheck /><ProcessVideo className="step-video" label="Packing arm seals, weighs, and verifies the parcel" poster="/images/orbis-warehouse-journey.jpg" src="/videos/warehouse-pack.mp4" /><strong>Pack</strong><p>The packing arm seals, weighs, and verifies it.</p></li>
+                <li><span>03</span><Truck /><ProcessVideo className="step-video" label="Dock robot loads the package into a linehaul truck" poster="/images/orbis-warehouse-journey.jpg" src="/videos/warehouse-linehaul.mp4" /><strong>Linehaul</strong><p>The dock loads the truck and signs custody over.</p></li>
+                <li><span>04</span><Route /><ProcessVideo className="step-video" label="Autonomous vehicle carries the package through the neighborhood" poster="/images/orbis-warehouse-journey.jpg" src="/videos/warehouse-autonomous-road.mp4" /><strong>Autonomous road</strong><p>A Waymo-class vehicle accepts the final-mile route.</p></li>
+                <li><span>05</span><House /><ProcessVideo className="step-video" label="Small delivery robot places the parcel on the porch" poster="/images/orbis-warehouse-journey.jpg" src="/videos/warehouse-porch.mp4" /><strong>Doorstep</strong><p>The delivery robot places it on the porch and proves arrival.</p></li>
               </ol>
             </div>
           </article>
@@ -233,7 +248,7 @@ export default function Home() {
               />
               <div className="use-case-media-topline">
                 <span>GENERATED WORLD / HOME RESET</span>
-                <span><Play size={11} fill="currentColor" /> Motion-ready scene</span>
+                <span><Play size={11} fill="currentColor" /> Video reference world</span>
               </div>
               <div className="use-case-media-caption">
                 <span><i /> DINNER FOR 16</span>
@@ -260,11 +275,11 @@ export default function Home() {
               </div>
 
               <div className="home-settings" aria-label="The room settings Orbis coordinates">
-                <div><Lightbulb /><span><strong>Lights</strong><small>Warm 2700K layers</small></span></div>
-                <div><Armchair /><span><strong>Room layout</strong><small>Conversation + dining zones</small></span></div>
-                <div><SprayCan /><span><strong>Cleanliness</strong><small>Vacuum, mop, clear surfaces</small></span></div>
-                <div><Sparkles /><span><strong>Decoration</strong><small>Greenery, linens, candles</small></span></div>
-                <div><UtensilsCrossed /><span><strong>Other tasks</strong><small>Set 16 places, stage dishes</small></span></div>
+                <div><Lightbulb /><ProcessVideo className="step-video" label="Smart lights warm the room to an evening ambience" poster="/images/orbis-home-dinner-reset.jpg" src="/videos/home-lights.mp4" /><span><strong>Lights</strong><small>Warm 2700K layers</small></span></div>
+                <div><Armchair /><ProcessVideo className="step-video" label="Furniture robots create conversation and dining zones" poster="/images/orbis-home-dinner-reset.jpg" src="/videos/home-layout.mp4" /><span><strong>Room layout</strong><small>Conversation + dining zones</small></span></div>
+                <div><SprayCan /><ProcessVideo className="step-video" label="Home robots vacuum, mop, and clear surfaces" poster="/images/orbis-home-dinner-reset.jpg" src="/videos/home-cleanliness.mp4" /><span><strong>Cleanliness</strong><small>Vacuum, mop, clear surfaces</small></span></div>
+                <div><Sparkles /><ProcessVideo className="step-video" label="A home robot arranges greenery, linens, and candles" poster="/images/orbis-home-dinner-reset.jpg" src="/videos/home-decoration.mp4" /><span><strong>Decoration</strong><small>Greenery, linens, candles</small></span></div>
+                <div><UtensilsCrossed /><ProcessVideo className="step-video" label="Robotic arms set sixteen places and stage dishes" poster="/images/orbis-home-dinner-reset.jpg" src="/videos/home-table-tasks.mp4" /><span><strong>Other tasks</strong><small>Set 16 places, stage dishes</small></span></div>
               </div>
 
               <div className="layout-presets">
@@ -277,6 +292,8 @@ export default function Home() {
           </article>
         </div>
       </section>
+
+      <MachineGallery />
 
       <section className="closing-section">
         <p>THE COORDINATION LAYER FOR PHYSICAL AI</p>
