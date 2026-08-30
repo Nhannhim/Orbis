@@ -812,7 +812,10 @@ export function OrbisWorkspace({ displayName, demo = false }: { displayName: str
   const selectedRobotFeedMatch = selectedFeedRobot?.id === selectedSessionRobot.id;
   const selectedRobotRuntimeStatus = robotInstanceStatus(selectedSessionRobot, activePlan, executionStep, isRunning);
   const activeSessionRobot = sessionRobotRoster.find((robot) => robotInstanceStatus(robot, activePlan, executionStep, isRunning) === 'working') ?? selectedSessionRobot;
-  const selectedPlanStageIndex = orderedActiveStages.findIndex((stage) => stage.feedId === selectedCameraFeed.id || stage.statusKey === selectedCameraFeed.statusKey);
+  const exactSelectedPlanStageIndex = orderedActiveStages.findIndex((stage) => stage.feedId === selectedCameraFeed.id);
+  const selectedPlanStageIndex = exactSelectedPlanStageIndex >= 0
+    ? exactSelectedPlanStageIndex
+    : orderedActiveStages.findIndex((stage) => stage.statusKey === selectedCameraFeed.statusKey);
   const selectedCoordinationStatus: CoordinationStatus | null = coordinatedSession
     ? selectedPlanStageIndex >= 0
       ? executionStageStatus(selectedPlanStageIndex, executionStep, isRunning, orderedActiveStages.length)
@@ -832,7 +835,7 @@ export function OrbisWorkspace({ displayName, demo = false }: { displayName: str
   const spaceMachineIsWaiting = spaceWorkflowStatus === 'waiting';
   const spaceStatusLabel = spaceWorkflowStatus === 'complete' ? 'Completed proof' : spaceWorkflowStatus === 'ready' ? 'Ready to start' : spaceMachineIsWaiting ? 'Waiting on workflow' : 'Working now';
   const spaceVideoShouldPlay = spaceMachineIsWorking;
-  const primaryVideoIsLive = executionActive && machineIsWorking && selectedCameraFeed.id === playbackFeedId && (liveViewState === 'loading' || liveViewState === 'playing');
+  const primaryVideoIsLive = executionActive && selectedCameraFeed.id === playbackFeedId && (liveViewState === 'loading' || liveViewState === 'playing');
   const machineDetailWorkflowStatus = workflowStatusForMachine(selectedMachine, activePlan, executionStep, isRunning);
   const machineDetailCameraFeed = allCameraFeeds.find((feed) => feed.id === defaultCameraFeedByMachine[selectedMachine.id]) ?? selectedCameraFeed;
   const machineDetailState = coordinatedSession
