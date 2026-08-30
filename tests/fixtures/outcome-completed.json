@@ -1,0 +1,50 @@
+{
+  "id": "outcome_dinner_12_completed",
+  "plan_id": "plan_dinner_12",
+  "title": "Pasta dinner for 12",
+  "objective": "Prepare a vegetarian pasta dinner for 12 by 7:00 PM and restore the home afterward.",
+  "scenario": "home_dinner",
+  "status": "completed",
+  "phase": "completed",
+  "progress_percent": 100,
+  "deadline": "2026-08-29T19:00:00-07:00",
+  "predicted_completion": "2026-08-29T20:42:00-07:00",
+  "schedule_risk": "completed",
+  "current_action": "Dinner and cleanup are complete.",
+  "current_worker_id": null,
+  "next_action": null,
+  "blocked_by": [],
+  "lanes": [
+    {"id": "warehouse", "name": "Warehouse", "status": "completed", "progress_percent": 100, "current_task_id": null, "blocked_by": [], "predicted_completion": "2026-08-29T17:12:00-07:00", "tasks": [{"id": "task_warehouse_complete", "lane_id": "warehouse", "name": "Fulfill grocery order", "capability": "fulfill_order", "status": "completed", "required": true, "assigned_worker_id": "warehouse-control", "progress_percent": 100, "current_action": "Order fulfilled and released.", "depends_on": [], "blocked_by": [], "started_at": "2026-08-29T16:30:00-07:00", "expected_completion": "2026-08-29T17:12:00-07:00", "completed_at": "2026-08-29T17:11:00-07:00", "evidence_ids": ["ev_warehouse_released"], "error": null, "permitted_actions": []}]},
+    {"id": "delivery", "name": "Delivery", "status": "completed", "progress_percent": 100, "current_task_id": null, "blocked_by": [], "predicted_completion": "2026-08-29T17:55:00-07:00", "tasks": [{"id": "task_delivery_complete", "lane_id": "delivery", "name": "Deliver and transfer groceries", "capability": "deliver_order", "status": "completed", "required": true, "assigned_worker_id": "delivery-large-01", "progress_percent": 100, "current_action": "Home custody transfer complete.", "depends_on": ["task_warehouse_complete"], "blocked_by": [], "started_at": "2026-08-29T17:13:00-07:00", "expected_completion": "2026-08-29T17:55:00-07:00", "completed_at": "2026-08-29T17:54:00-07:00", "evidence_ids": ["ev_home_handoff"], "error": null, "permitted_actions": []}]},
+    {"id": "home", "name": "Home", "status": "completed", "progress_percent": 100, "current_task_id": null, "blocked_by": [], "predicted_completion": "2026-08-29T20:42:00-07:00", "tasks": [
+      {"id": "task_home_dinner_complete", "lane_id": "home", "name": "Prepare dinner", "capability": "prepare_dinner_outcome", "status": "completed", "required": true, "assigned_worker_id": "home-humanoid-cook-01", "progress_percent": 100, "current_action": "Dinner readiness verified at 6:42 PM.", "depends_on": ["task_delivery_complete"], "blocked_by": [], "started_at": "2026-08-29T17:00:00-07:00", "expected_completion": "2026-08-29T18:45:00-07:00", "completed_at": "2026-08-29T18:42:00-07:00", "evidence_ids": ["ev_dinner_ready"], "error": null, "permitted_actions": []},
+      {"id": "task_cleanup_complete", "lane_id": "home", "name": "Restore home", "capability": "restore_home", "status": "completed", "required": true, "assigned_worker_id": "home-loader-01", "progress_percent": 100, "current_action": "Cleanup and final inspection passed.", "depends_on": ["task_home_dinner_complete"], "blocked_by": [], "started_at": "2026-08-29T20:10:00-07:00", "expected_completion": "2026-08-29T20:43:00-07:00", "completed_at": "2026-08-29T20:42:00-07:00", "evidence_ids": ["ev_home_restored", "ev_outcome_complete"], "error": null, "permitted_actions": []}
+    ]}
+  ],
+  "workers": [
+    {"id": "home-roomba-01", "name": "Roomba", "kind": "robot", "status": "available", "health": "healthy", "active_assignment": null, "reliability": {"attempts": 2, "completions": 2, "failures": 0, "interventions": 0, "success_rate": 1.0}},
+    {"id": "home-humanoid-cook-01", "name": "Humanoid Cook", "kind": "robot", "status": "available", "health": "healthy", "active_assignment": null, "reliability": {"attempts": 2, "completions": 2, "failures": 0, "interventions": 1, "success_rate": 1.0}},
+    {"id": "home-loader-01", "name": "Loader Robot", "kind": "robot", "status": "available", "health": "healthy", "active_assignment": null, "reliability": {"attempts": 4, "completions": 4, "failures": 0, "interventions": 0, "success_rate": 1.0}},
+    {"id": "home-furniture-01", "name": "Furniture Robot", "kind": "robot", "status": "available", "health": "healthy", "active_assignment": null, "reliability": {"attempts": 2, "completions": 2, "failures": 0, "interventions": 0, "success_rate": 1.0}},
+    {"id": "home-lamp-agent-01", "name": "Lamp Agent", "kind": "ai", "status": "available", "health": "healthy", "active_assignment": null, "reliability": {"attempts": 4, "completions": 4, "failures": 0, "interventions": 0, "success_rate": 1.0}}
+  ],
+  "order": {"id": "order_dinner_12", "status": "consumed", "warehouse_id": "warehouse-oakland-01", "manifest": {"status": "reconciled", "package_count": 3, "weight_kg": 24.5, "volume_l": 72, "refrigeration_required": true, "handling": ["keep_upright", "temperature_controlled"], "evidence_ids": ["ev_warehouse_released", "ev_home_handoff", "ev_order_reconciled"]}, "substitutions": [], "reconciliation": "matched"},
+  "routing": {"status": "handoff_complete", "selected_worker_id": "delivery-large-01", "selection_reason": "The dinner order required 72 L of capacity and temperature-controlled transport.", "candidates": [{"worker_id": "delivery-small-01", "eligible": false, "reasons": ["Order exceeds 45 L cargo capacity.", "Refrigerated compartment unavailable."]}, {"worker_id": "delivery-large-01", "eligible": true, "reasons": ["80 L cargo capacity available.", "Temperature-controlled transport supported."]}], "reservation": {"worker_id": "delivery-large-01", "status": "released", "reserved_at": "2026-08-29T17:12:00-07:00"}, "eta": "2026-08-29T17:52:00-07:00", "evidence_ids": ["ev_route_selected", "ev_home_handoff"]},
+  "custody": {"current": [{"object_id": "order_dinner_12", "worker_id": "home-humanoid-cook-01", "since": "2026-08-29T17:56:00-07:00"}], "history": [{"id": "custody_001", "object_id": "order_dinner_12", "from_worker_id": "warehouse-control", "to_worker_id": "packing-arm-01", "status": "accepted", "manifest_verified": true, "evidence_ids": ["ev_warehouse_released"], "occurred_at": "2026-08-29T17:08:00-07:00"}, {"id": "custody_002", "object_id": "order_dinner_12", "from_worker_id": "packing-arm-01", "to_worker_id": "delivery-large-01", "status": "accepted", "manifest_verified": true, "evidence_ids": ["ev_route_selected"], "occurred_at": "2026-08-29T17:13:00-07:00"}, {"id": "custody_003", "object_id": "order_dinner_12", "from_worker_id": "delivery-large-01", "to_worker_id": "home-loader-01", "status": "accepted", "manifest_verified": true, "evidence_ids": ["ev_home_handoff"], "occurred_at": "2026-08-29T17:54:00-07:00"}, {"id": "custody_004", "object_id": "order_dinner_12", "from_worker_id": "home-loader-01", "to_worker_id": "home-humanoid-cook-01", "status": "accepted", "manifest_verified": true, "evidence_ids": ["ev_order_reconciled"], "occurred_at": "2026-08-29T17:56:00-07:00"}]},
+  "attention": null,
+  "permitted_actions": ["repeat_outcome", "save_template", "report_issue"],
+  "dinner_readiness": {"status": "passed", "passed": 7, "required": 7, "completed_at": "2026-08-29T18:42:00-07:00", "checks": [{"id": "meal_ready", "status": "passed"}, {"id": "places_for_12", "status": "passed"}, {"id": "room_clean", "status": "passed"}, {"id": "layout_safe", "status": "passed"}, {"id": "dinner_lighting", "status": "passed"}, {"id": "dietary_policy", "status": "passed"}, {"id": "order_reconciled", "status": "passed"}]},
+  "cleanup": {"status": "completed", "trigger": "host_confirmation", "started_at": "2026-08-29T20:10:00-07:00", "completed_at": "2026-08-29T20:42:00-07:00", "checks": [{"id": "dishes_cleared", "status": "passed"}, {"id": "leftovers_stored", "status": "passed"}, {"id": "cooking_equipment_safe", "status": "passed"}, {"id": "furniture_restored", "status": "passed"}, {"id": "floors_clean", "status": "passed"}, {"id": "lighting_restored", "status": "passed"}, {"id": "final_inspection", "status": "passed"}]},
+  "evidence": [
+    {"id": "ev_dinner_ready", "type": "outcome_verification", "actor_id": "orbis-outcome-coordinator", "task_id": "task_home_dinner_complete", "object_id": "outcome_dinner_12_completed", "summary": "Dinner was ready for 12 at 6:42 PM.", "source": "outcome_coordinator", "confidence": null, "occurred_at": "2026-08-29T18:42:00-07:00"},
+    {"id": "ev_home_restored", "type": "outcome_verification", "actor_id": "home-loader-01", "task_id": "task_cleanup_complete", "object_id": "home", "summary": "All cleanup checks passed and the home was restored.", "source": "home_simulator", "confidence": null, "occurred_at": "2026-08-29T20:41:40-07:00"},
+    {"id": "ev_outcome_complete", "type": "outcome_verification", "actor_id": "orbis-outcome-coordinator", "task_id": "task_cleanup_complete", "object_id": "outcome_dinner_12_completed", "summary": "Dinner and post-dinner cleanup completed successfully.", "source": "outcome_coordinator", "confidence": null, "occurred_at": "2026-08-29T20:42:00-07:00"}
+  ],
+  "events": [
+    {"id": "oevt_000099", "sequence": 99, "type": "task.completed", "outcome_id": "outcome_dinner_12_completed", "lane_id": "home", "task_id": "task_cleanup_complete", "message": "Final Home verification passed.", "data": {"evidence_id": "ev_home_restored"}, "source": "home_simulator", "occurred_at": "2026-08-29T20:41:40-07:00"},
+    {"id": "oevt_000100", "sequence": 100, "type": "outcome.completed", "outcome_id": "outcome_dinner_12_completed", "lane_id": null, "task_id": null, "message": "Dinner for 12 completed and the home was restored.", "data": {"evidence_id": "ev_outcome_complete"}, "source": "outcome_coordinator", "occurred_at": "2026-08-29T20:42:00-07:00"}
+  ],
+  "created_at": "2026-08-29T16:29:50-07:00",
+  "updated_at": "2026-08-29T20:42:00-07:00"
+}

@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Activity, AlertTriangle, ArrowLeft, ArrowUp, Bot, Boxes, Cable, Check, CheckCircle2, CircleHelp,
   Clock3, ListChecks, Map, MessageSquarePlus, MoreHorizontal, Package, PanelLeftClose,
@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { MachineThreePreview } from '@/components/machine-three-preview';
 import { OrbisMark } from '@/components/orbis-mark';
+import { OutcomeExperience, OutcomeWorkflowPanel } from '@/components/outcomes';
 import { Button } from '@/components/ui/button';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { Textarea } from '@/components/ui/textarea';
@@ -30,6 +31,22 @@ import {
   type VisionScenario,
   type WorkflowView,
 } from '@/lib/orbis-api';
+import {
+  approveOutcomePlan,
+  createOutcomePlan,
+  getOutcome,
+  getOutcomeHistory,
+  getOutcomeSnapshot,
+  listOutcomes,
+  type OutcomeCheckpoint,
+  type OutcomeSummary,
+  performOutcomeAction,
+  startOutcome,
+  type OutcomeActionKind,
+  type OutcomePlanView,
+  type OutcomeTaskView,
+  type OutcomeView,
+} from '@/lib/outcome-api';
 
 type ViewId = 'orchestrator' | 'connections' | 'tasks' | 'space';
 type MachineId = 'packing' | 'amr' | 'loading';
@@ -108,7 +125,6 @@ const initialRecentTasks = [
   { title: 'Outbound fulfillment', meta: 'Warehouse 01 · Active', icon: Warehouse },
   { title: 'Dock 04 reset', meta: '12 minutes ago', icon: Truck },
   { title: 'Inventory sweep', meta: 'Yesterday', icon: Package },
-  { title: 'Dinner preparation', meta: 'Home · Aug 27', icon: Bot },
 ];
 
 const taskGroups = [
@@ -344,6 +360,16 @@ export function OrbisWorkspace({ displayName, demo = false }: { displayName: str
   const [visionMode, setVisionMode] = useState<'openai' | 'fixture'>('fixture');
   const [pollIntervalMs, setPollIntervalMs] = useState(750);
   const [workflow, setWorkflow] = useState<WorkflowView | null>(null);
+  const [outcomePlan, setOutcomePlan] = useState<OutcomePlanView | null>(null);
+  const [outcome, setOutcome] = useState<OutcomeView | null>(null);
+  const [selectedOutcomeTaskId, setSelectedOutcomeTaskId] = useState<string>();
+  const [historicalOutcome, setHistoricalOutcome] = useState<OutcomeView | null>(null);
+  const [historyMode, setHistoryMode] = useState(false);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [checkpoints, setCheckpoints] = useState<OutcomeCheckpoint[]>([]);
+  const [homeRuns, setHomeRuns] = useState<OutcomeSummary[]>([]);
+  const historyRequest = useRef(0);
+  const displayedOutcome = historicalOutcome ?? outcome;
   const [apiStatus, setApiStatus] = useState<'checking' | 'online' | 'offline'>('checking');
   const [apiError, setApiError] = useState<string | null>(null);
   const [actionPending, setActionPending] = useState(false);
@@ -356,7 +382,9 @@ export function OrbisWorkspace({ displayName, demo = false }: { displayName: str
   const processMachine = machines[selectedProcess.machineId];
   const selectedMachine = activeView === 'orchestrator' ? processMachine : machines[selectedMachineId];
   const selectedStatus = statuses[selectedProcess.id];
-  const isRunning = actionPending || ['pending', 'inspecting', 'ready_for_routing', 'routing', 'running'].includes(workflow?.status ?? '');
+  const isRunning = actionPending
+    || ['pending', 'inspecting', 'ready_for_routing', 'routing', 'running'].includes(workflow?.status ?? '')
+    || ['executing', 'cleaning_up'].includes(outcome?.status ?? '');
   const machineIsWorking = selectedStatus === 'running';
   const vision = workflow?.vision ?? emptyVision;
   const routingCandidates = workflow?.routing.candidates.length ? workflow.routing.candidates : fallbackRoutingCandidates;
@@ -404,6 +432,102 @@ export function OrbisWorkspace({ displayName, demo = false }: { displayName: str
     };
   }, [pollIntervalMs, workflow?.id, workflow?.status]);
 
+  useEffect(() => {
+    if (!outcome?.id || ['completed', 'cancelled'].includes(outcome.status)) return;
+    let cancelled = false;
+    const refresh = async () => {
+      try {
+        const next = await getOutcome(outcome.id);
+        if (cancelled) return;
+        setOutcome(next);
+        setApiStatus('online');
+        setApiError(null);
+      } catch (error) {
+        if (cancelled) return;
+        setApiStatus(connectionStatusFor(error));
+        setApiError(error instanceof Error ? error.message : 'Unable to refresh the dinner outcome.');
+      }
+    };
+    const interval = window.setInterval(() => { void refresh(); }, pollIntervalMs);
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+    };
+  }, [outcome?.id, outcome?.status, pollIntervalMs]);
+
+  useEffect(() => {
+    let cancelled = false;
+    listOutcomes().then(runs => { if (!cancelled) setHomeRuns(runs); }).catch(() => undefined);
+    return () => { cancelled = true; };
+  }, [outcome?.id, outcome?.status]);
+
+  useEffect(() => {
+    let cancelled = false;
+    let saved: string | null = null;
+    try { saved = sessionStorage.getItem('orbis.home.session.v1'); } catch { /* Storage may be unavailable. */ }
+    if (saved) getOutcome(saved).then(async next => {
+      if (cancelled) return;
+      setOutcome(next); setSessionTitle(next.title); setTaskMode('session'); setWorkflowOpen(true);
+      if (next.status === 'completed') {
+        const [points, snapshot] = await Promise.all([getOutcomeHistory(next.id), getOutcomeSnapshot(next.id, next.latestSequence)]);
+        if (cancelled) return;
+        setCheckpoints(points); setHistoricalOutcome(snapshot); setHistoryMode(true);
+      }
+    }).catch(error => { if (!cancelled) setApiError(error instanceof Error ? error.message : 'This Home session has expired.'); });
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
+    if (outcome?.id) try { sessionStorage.setItem('orbis.home.session.v1', outcome.id); } catch { /* Session persistence is optional. */ }
+  }, [outcome?.id]);
+
+  function returnToLive() {
+    historyRequest.current += 1;
+    setHistoricalOutcome(null); setHistoryMode(false); setHistoryLoading(false); setSelectedOutcomeTaskId(undefined);
+  }
+
+  async function showCheckpoint(point: OutcomeCheckpoint) {
+    if (!outcome) return;
+    const request = ++historyRequest.current;
+    setHistoryLoading(true);
+    try {
+      const snapshot = await getOutcomeSnapshot(outcome.id, point.sequence);
+      if (request !== historyRequest.current) return;
+      setHistoricalOutcome(snapshot); setHistoryMode(true); setSelectedOutcomeTaskId(point.taskId);
+    } catch (error) {
+      if (request === historyRequest.current) setApiError(error instanceof Error ? error.message : 'Checkpoint unavailable.');
+    } finally { if (request === historyRequest.current) setHistoryLoading(false); }
+  }
+
+  async function openHistory() {
+    if (!outcome) return;
+    const request = ++historyRequest.current;
+    setHistoryLoading(true);
+    try {
+      const [points, snapshot] = await Promise.all([getOutcomeHistory(outcome.id), getOutcomeSnapshot(outcome.id, outcome.latestSequence)]);
+      if (request !== historyRequest.current) return;
+      setCheckpoints(points); setHistoricalOutcome(snapshot); setHistoryMode(true); setSelectedOutcomeTaskId(undefined);
+    } catch (error) {
+      if (request === historyRequest.current) setApiError(error instanceof Error ? error.message : 'Session history unavailable.');
+    } finally { if (request === historyRequest.current) setHistoryLoading(false); }
+  }
+
+  async function openHomeRun(id: string) {
+    const request = ++historyRequest.current;
+    setApiError(null);
+    try {
+      const next = await getOutcome(id);
+      if (request !== historyRequest.current) return;
+      setOutcome(next); setOutcomePlan(null); setWorkflow(null); setHistoricalOutcome(null); setHistoryMode(false); setSelectedOutcomeTaskId(undefined);
+      setActiveView('orchestrator'); setTaskMode('session'); setWorkflowOpen(true); setSessionTitle(next.title);
+      if (next.status === 'completed') {
+        const [points, snapshot] = await Promise.all([getOutcomeHistory(id), getOutcomeSnapshot(id, next.latestSequence)]);
+        if (request !== historyRequest.current) return;
+        setCheckpoints(points); setHistoricalOutcome(snapshot); setHistoryMode(true);
+      }
+    } catch (error) { if (request === historyRequest.current) setApiError(error instanceof Error ? error.message : 'This Home session has expired.'); }
+  }
+
   function navigate(view: ViewId) {
     setActiveView(view);
     setShowScanner(false);
@@ -412,6 +536,8 @@ export function OrbisWorkspace({ displayName, demo = false }: { displayName: str
   }
 
   function startNewTask() {
+    returnToLive();
+    try { sessionStorage.removeItem('orbis.home.session.v1'); } catch { /* optional storage */ }
     setActiveView('orchestrator');
     setTaskMode('new');
     setSessionReturn(null);
@@ -419,14 +545,20 @@ export function OrbisWorkspace({ displayName, demo = false }: { displayName: str
     setObjective(taskScenarios.warehouse.objective);
     setFollowUp('');
     setWorkflow(null);
+    setOutcomePlan(null);
+    setOutcome(null);
+    setSelectedOutcomeTaskId(undefined);
     setApiError(null);
     setWorkflowOpen(false);
   }
 
   function selectTaskScenario(nextScenarioId: TaskScenarioId) {
+    returnToLive();
     setTaskScenarioId(nextScenarioId);
     setObjective(taskScenarios[nextScenarioId].objective);
     setApiError(null);
+    setOutcomePlan(null);
+    setOutcome(null);
   }
 
   function selectProcess(processId: ProcessId) {
@@ -436,6 +568,7 @@ export function OrbisWorkspace({ displayName, demo = false }: { displayName: str
   }
 
   function openSession(title: string, machineId: MachineId, returnTo: SessionReturn = null) {
+    returnToLive(); setOutcome(null); setOutcomePlan(null);
     setSessionTitle(title);
     setSelectedMachineId(machineId);
     selectProcess(processForMachine(machineId));
@@ -481,8 +614,19 @@ export function OrbisWorkspace({ displayName, demo = false }: { displayName: str
     setWorkflowOpen(true);
     setActionPending(true);
     setApiError(null);
-    setRecentTasks((items) => [{ title: generatedTitle, meta: 'Warehouse 01 · Just now', icon: Warehouse }, ...items.filter((item) => item.title !== generatedTitle)].slice(0, 6));
+    if (taskScenarioId === 'warehouse') setRecentTasks((items) => [{ title: generatedTitle, meta: 'Warehouse 01 · Just now', icon: Warehouse }, ...items.filter((item) => item.title !== generatedTitle)].slice(0, 6));
     try {
+      if (taskScenarioId === 'home') {
+        const plan = await createOutcomePlan({
+          objective: taskObjective,
+          details: { guest_count: 12, ready_time: '7:00 PM', dietary: ['vegetarian'] },
+        });
+        setOutcomePlan(plan);
+        setOutcome(null);
+        setSessionTitle(plan.title);
+        setApiStatus('online');
+        return;
+      }
       const created = await createWorkflow({ objective: taskObjective, scenarioId, visionMode });
       if (!created.id) throw new Error('The backend created a workflow without an ID.');
       setWorkflow(created);
@@ -495,6 +639,56 @@ export function OrbisWorkspace({ displayName, demo = false }: { displayName: str
     } finally {
       setActionPending(false);
     }
+  }
+
+  async function approveAndStartOutcome() {
+    if (!outcomePlan?.id || actionPending) return;
+    setActionPending(true);
+    setApiError(null);
+    try {
+      const approved = await approveOutcomePlan(outcomePlan.id);
+      setOutcome(approved);
+      const started = await startOutcome(approved.id);
+      setOutcome(started);
+      setApiStatus('online');
+    } catch (error) {
+      setApiStatus(connectionStatusFor(error));
+      setApiError(error instanceof Error ? error.message : 'Unable to approve and start this dinner plan.');
+    } finally {
+      setActionPending(false);
+    }
+  }
+
+  async function runOutcomeAction(action: OutcomeActionKind) {
+    if (!outcome?.id || actionPending || historyMode || historicalOutcome) return;
+    setActionPending(true);
+    setApiError(null);
+    try {
+      const next = await performOutcomeAction(outcome.id, {
+        action,
+        taskId: action === 'retry_task' ? undefined : selectedOutcomeTaskId,
+        notes: action === 'submit_vision_review' ? 'Package was repackaged and cleared by the demo inspector.' : undefined,
+        payload: action === 'submit_vision_review' ? { disposition: 'repackaged_and_cleared' } : undefined,
+      });
+      setOutcome(next);
+      setApiStatus('online');
+    } catch (error) {
+      setApiStatus(connectionStatusFor(error));
+      setApiError(error instanceof Error ? error.message : 'Unable to apply this outcome action.');
+    } finally {
+      setActionPending(false);
+    }
+  }
+
+  function selectOutcomeTask(task: OutcomeTaskView) {
+    setSelectedOutcomeTaskId(task.id);
+  }
+
+  function backToOutcomeRequest() {
+    setTaskMode('new');
+    setOutcomePlan(null);
+    setOutcome(null);
+    setWorkflowOpen(false);
   }
 
   async function reviewVision(disposition: ReviewDisposition) {
@@ -572,14 +766,31 @@ export function OrbisWorkspace({ displayName, demo = false }: { displayName: str
         <section className="ow-prompt-card ow-new-task-composer">
           <Textarea aria-label="New task objective" placeholder="Ask Orbis to coordinate an outcome…" value={objective} onChange={(event) => setObjective(event.target.value)} disabled={isRunning} />
           {taskScenarioId === 'warehouse' && <ScenarioControls scenarios={scenarios} selectedId={scenarioId} onSelect={setScenarioId} mode={visionMode} onModeChange={setVisionMode} disabled={isRunning} />}
-          {taskScenarioId === 'home' && <div className="ow-home-scenario-note"><House /><span><strong>Five coordinated Home workers</strong><small>Roomba · Humanoid cook · Loader robot · Furniture robot · Lamp agent</small><small>The dinner workflow is the next scenario to connect to the coordinator.</small></span></div>}
+          {taskScenarioId === 'home' && <div className="ow-home-scenario-note"><House /><span><strong>Five coordinated Home workers</strong><small>Roomba · Humanoid cook · Loader robot · Furniture robot · Lamp agent</small><small>Orbis will create a reviewable plan before ordering or starting physical work.</small></span></div>}
           {apiError && <div className="ow-api-error is-compact"><AlertTriangle /><span><strong>Backend offline</strong><small>{apiError}</small></span><button type="button" onClick={retryCurrentWorkflow} disabled={actionPending}><RefreshCw /> Retry</button></div>}
-          <footer><span><Sparkles /> {taskScenarioId === 'warehouse' ? 'First-instance warehouse execution' : 'Home scenario preview'}</span><Button size="icon" aria-label={taskScenarioId === 'warehouse' ? 'Start warehouse task' : 'Home workflow is not connected yet'} onClick={runObjective} disabled={taskScenarioId === 'home' || isRunning || !objective.trim()}>{isRunning ? <Activity className="spin-soft" /> : <ArrowUp />}</Button></footer>
+          <footer><span><Sparkles /> {taskScenarioId === 'warehouse' ? 'First-instance warehouse execution' : 'Plan, approve, then coordinate the complete dinner outcome'}</span><Button size="icon" aria-label={taskScenarioId === 'warehouse' ? 'Start warehouse task' : 'Create Home dinner plan'} onClick={runObjective} disabled={isRunning || !objective.trim()}>{isRunning ? <Activity className="spin-soft" /> : <ArrowUp />}</Button></footer>
         </section>
       </section>
     </div>}
 
-    {activeView === 'orchestrator' && taskMode === 'session' && <div className="ow-detail-scroll ow-session-page">
+    {activeView === 'orchestrator' && taskMode === 'session' && (outcomePlan || outcome) && <div className="ow-detail-scroll ow-session-page">
+      {apiError && <div className="ow-api-error is-compact"><AlertTriangle /><span><strong>Outcome update failed</strong><small>{apiError}</small></span></div>}
+      <OutcomeExperience
+        plan={outcomePlan}
+        outcome={displayedOutcome}
+        busy={actionPending}
+        selectedTaskId={selectedOutcomeTaskId}
+        onBack={backToOutcomeRequest}
+        onApprovePlan={approveAndStartOutcome}
+        onAction={runOutcomeAction}
+        onSelectTask={selectOutcomeTask}
+        onFollow={() => setSelectedOutcomeTaskId(undefined)}
+        onReturnLive={returnToLive}
+        onRepeat={startNewTask}
+      />
+    </div>}
+
+    {activeView === 'orchestrator' && taskMode === 'session' && !outcomePlan && !outcome && <div className="ow-detail-scroll ow-session-page">
       <header className="ow-page-title ow-session-title">
         <div className="ow-title-with-back">{sessionReturn && <button className="ow-back-button" type="button" aria-label="Go back" onClick={backFromSession}><ArrowLeft /></button>}<div><h1>{sessionTitle}</h1><p>Task session · Warehouse 01 · {workflow ? displayToken(workflow.status) : 'Ready to run'}</p></div></div>
         <button type="button" aria-label="Session actions"><MoreHorizontal /></button>
@@ -649,7 +860,18 @@ export function OrbisWorkspace({ displayName, demo = false }: { displayName: str
     </div>}
   </section>;
 
-  const workflowContent = activeView === 'orchestrator' && taskMode === 'session' ? <aside className="ow-workflow-pane">
+  const workflowContent = activeView === 'orchestrator' && taskMode === 'session' && outcome ? <OutcomeWorkflowPanel
+    outcome={displayedOutcome ?? outcome}
+    selectedTaskId={selectedOutcomeTaskId}
+    onSelectTask={selectOutcomeTask}
+    onClose={() => setWorkflowOpen(false)}
+    historyMode={historyMode}
+    historyLoading={historyLoading}
+    checkpoints={checkpoints}
+    onHistory={openHistory}
+    onLive={returnToLive}
+    onCheckpoint={showCheckpoint}
+  /> : activeView === 'orchestrator' && taskMode === 'session' && outcomePlan?.preview ? <OutcomeWorkflowPanel key={outcomePlan.id} outcome={outcomePlan.preview} preview onClose={() => setWorkflowOpen(false)} /> : activeView === 'orchestrator' && taskMode === 'session' ? <aside className="ow-workflow-pane">
     <header><div><h2>Workflow</h2><p>{workflow?.id ?? 'Not started'} · {sessionTitle}</p></div><div className="ow-pane-actions"><span className={`ow-live-status ${apiStatus === 'offline' ? 'is-offline' : ''}`}><i /> {apiStatus === 'offline' ? 'Offline' : 'Backend live'}</span><button type="button" aria-label="Close workflow panel" onClick={() => setWorkflowOpen(false)}><PanelRightClose /></button></div></header>
     <div className="ow-workflow-summary"><span>Vision {visionStateLabel(vision.state).toLowerCase()}</span><span>{workflow?.steps.length ?? 3} physical steps</span><span>{workflow ? `${workflow.progress}%` : 'Not started'}</span></div>
     <FlowGraph statuses={statuses} selectedProcessId={selectedProcessId} onSelect={selectProcess} />
@@ -674,13 +896,13 @@ export function OrbisWorkspace({ displayName, demo = false }: { displayName: str
           <button className={activeView === 'space' ? 'is-active' : ''} onClick={() => navigate('space')} type="button"><Map /><span>Space</span></button>
         </nav>
         <section className="ow-projects"><header><span>Projects</span><button type="button" aria-label="Add project">+</button></header><button className="is-active" type="button" onClick={() => navigate('orchestrator')}><span className="ow-project-mark"><Warehouse /></span><span><strong>Warehouse 01</strong><small>Northstar Logistics</small></span><MoreHorizontal /></button></section>
-        <section className="ow-recents"><header><span>Recent tasks</span></header>{recentTasks.map((task) => { const Icon = task.icon; return <button type="button" key={task.title} onClick={() => openSession(task.title, task.title.includes('Dock') ? 'loading' : 'packing')}><Icon /><span><strong>{task.title}</strong><small>{task.meta}</small></span></button>; })}</section>
+        <section className="ow-recents"><header><span>Recent tasks</span></header>{homeRuns.map(run => <button type="button" key={run.id} onClick={() => openHomeRun(run.id)}><House /><span><strong>{run.title}</strong><small>Home · {run.status.replaceAll('_', ' ')}</small></span></button>)}{recentTasks.map((task) => { const Icon = task.icon; return <button type="button" key={task.title} onClick={() => openSession(task.title, task.title.includes('Dock') ? 'loading' : 'packing')}><Icon /><span><strong>{task.title}</strong><small>{task.meta}</small></span></button>; })}</section>
         <footer className="ow-sidebar-footer"><button type="button"><CircleHelp /><span>Help</span></button><button type="button"><Settings /><span>Settings</span></button><span className="ow-avatar">{shortName.slice(0,1).toUpperCase()}</span></footer>
       </aside>}
 
       <section className="ow-shell">
         <header className="ow-topbar">
-          <div><strong>{topbarTitle}</strong>{taskMode === 'session' && activeView === 'orchestrator' && <span className="ow-topbar-session"><i /> {isRunning ? 'Working' : 'Active'}</span>}</div>
+          <div><strong>{topbarTitle}</strong>{taskMode === 'session' && activeView === 'orchestrator' && <span className="ow-topbar-session"><i /> {historyMode ? 'History' : outcome ? displayToken(outcome.status) : isRunning ? 'Working' : workflow?.status === 'completed' ? 'Completed' : 'Active'}</span>}</div>
           <div>{demo && <span className="ow-demo">Demo</span>}<span className={`ow-online ${apiStatus === 'offline' ? 'is-offline' : apiStatus === 'checking' ? 'is-checking' : ''}`}><i /> {apiStatus === 'offline' ? 'Backend offline' : apiStatus === 'checking' ? 'Checking backend' : 'All systems operational'}</span><span className="ow-panel-controls"><button type="button" aria-label={sidebarOpen ? 'Close navigation panel' : 'Open navigation panel'} onClick={() => setSidebarOpen((value) => !value)}>{sidebarOpen ? <PanelLeftClose /> : <PanelLeftOpen />}</button><button type="button" aria-label={workflowOpen ? 'Close workflow panel' : 'Open workflow panel'} onClick={() => setWorkflowOpen((value) => !value)}>{workflowOpen ? <PanelRightClose /> : <PanelRightOpen />}</button></span><button type="button" aria-label="Search"><Search /></button></div>
         </header>
         <ResizablePanelGroup key={workflowOpen ? 'split' : 'single'} orientation="horizontal" className="ow-panel-group">
