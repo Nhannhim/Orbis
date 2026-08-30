@@ -78,6 +78,9 @@ cd site && npm run build
 - `POST /api/v1/outcome-plans/{id}/approve` — approve purchase and execution
 - `POST /api/v1/outcomes/{id}/start` — start Warehouse and Home work in parallel
 - `GET /api/v1/outcomes/{id}` — complete three-lane outcome snapshot
+- `GET /api/v1/outcomes` — Home runs retained by this backend session
+- `GET /api/v1/outcomes/{id}/history` — immutable checkpoint index
+- `GET /api/v1/outcomes/{id}/snapshots/{sequence}` — recorded graph, robot, and media state
 - `POST /api/v1/outcomes/{id}/actions` — review, recovery, and cleanup actions
 - `GET /api/v1/outcomes/{id}/events` — poll monotonic outcome events
 - `GET /api/v1/home/workers` — the five simulated Home workers

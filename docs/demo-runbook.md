@@ -22,16 +22,20 @@ Open [http://localhost:3000/app/demo](http://localhost:3000/app/demo). The UI mu
 
 1. Select **Home** on New Task and keep the proposed vegetarian pasta objective.
 2. Select **Create plan**. Review the menu, grocery estimate, workers, parallel schedule, and hard approval gate.
-3. Select **Approve order & start**. Keep the center Home camera grid and right **Workflow** rail visible together. Point out that Warehouse and Home preparation start independently.
-4. Watch active Home feeds highlight together while the right rail names each branch's current task, progress, dependency, and join point. Select a rail node to inspect that task in the session.
+3. Select **Approve & start**. Keep the focused activity area and right **Workflow** rail visible together. Point out that Warehouse and Home preparation start independently.
+4. Watch up to three relevant feeds together while the right rail names each robot, assignment, status, dependency, and join point. Select a robot card to hold its matching media; choose **Follow current work** to resume automatic focus.
 5. Show the specialized produce, dry-goods, and cold-storage pickers feeding the existing Vision, packing, AMR, and loading workflow.
 6. Show **SIMULATED ROUTING**. The small robot is rejected for volume and refrigeration; the large delivery worker is selected with explicit reasons.
 7. Follow the delivery join: Loader Robot accepts and reconciles grocery custody, then Humanoid Cook receives the ingredients.
 8. End preparation on **Dinner Ready**, including the readiness checklist and accumulated custody/evidence history.
 9. Select **Dinner is over — start cleanup**. Follow Loader, Humanoid Cook, Furniture Robot, Roomba, and Lamp Agent through restoration.
-10. End on **Completed**, where every required cleanup check has proof and the outcome progress is 100%.
+10. At **Dinner Ready**, point out the synthetic milestone illustration and the host cleanup gate. Confirm dinner is over.
+11. End on **Completed**, where the distinct restored-room illustration leads the page, progress is 100%, and no worker is still labeled active.
+12. Open **History** in the Workflow rail, select an earlier checkpoint, and show that its robot statuses and image do not replace or pause live state. Use **Return to live** afterward.
 
-The dinner-ready phase takes about 20–25 seconds and cleanup takes about 8 seconds, leaving enough time to narrate parallel work and handoffs. Videos must remain labeled **SIMULATED FEED** and never advance task state.
+Dinner Ready takes roughly 60–90 seconds and cleanup 20–30 seconds, excluding human review and provider delays. Videos are labeled **Simulated feed**; generated milestone images are labeled **Synthetic illustration**. Neither media type advances state or independently proves physical or food-safety conditions.
+
+History is session-only. Restarting the backend intentionally expires previous Home run details.
 
 ## Supporting Vision story: damaged package
 

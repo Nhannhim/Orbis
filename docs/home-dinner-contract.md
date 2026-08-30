@@ -44,6 +44,9 @@ Existing `/api/v1/workflows`, Vision, workers, and system endpoints remain uncha
 | POST | `/api/v1/outcomes/{outcome_id}/start` | Start approved Warehouse and Home work |
 | POST | `/api/v1/outcomes/{outcome_id}/actions` | Submit a recovery, host, or lifecycle action |
 | GET | `/api/v1/outcomes/{outcome_id}/events?after_sequence=N` | Poll monotonic outcome events |
+| GET | `/api/v1/outcomes` | List Home runs retained by the current backend session |
+| GET | `/api/v1/outcomes/{outcome_id}/history` | List immutable transition and milestone checkpoints |
+| GET | `/api/v1/outcomes/{outcome_id}/snapshots/{sequence}` | Read the detached historical graph, worker states, and media references |
 | GET | `/api/v1/home/workers` | List the five Home workers |
 | GET | `/api/v1/home/workers/{worker_id}` | Retrieve Home worker detail and reliability |
 
@@ -201,6 +204,12 @@ Routing evaluates package facts, destination, availability, deadline, refrigerat
 Routing statuses are `pending`, `blocked`, `evaluating`, `selected`, `in_transit`, `arrived`, `handoff_complete`, and `cancelled`.
 
 The P0 dinner-for-12 fixture rejects the small robot for insufficient volume and refrigeration, and selects the large delivery worker. A routing recommendation alone does not transfer custody.
+
+## Robot assignments and evidence history
+
+Home execution is dependency-aware and prevents overlapping assignments to the same robot. The dinner path is explicitly `Loader receives → Humanoid cooks → Humanoid plates → Loader serves → Dinner Ready`. Cleanup can proceed in parallel after host confirmation, while furniture restoration waits for cleared surfaces and leftovers, and final floor cleaning waits for furniture restoration.
+
+Every transition, handoff, blocker, decision, and milestone stores a detached session snapshot. A snapshot is never reconstructed from the current graph and exposes no execution actions. Media references are immutable and identify either a source clip plus offset (`simulated_video_frame`), a checkpoint-time `synthetic_illustration`, or an honest `unavailable` state. Backend restart clears all runs and snapshots by design.
 
 ## Custody
 
