@@ -9,6 +9,8 @@ from typing import Any, Dict, Optional
 from urllib.parse import urlparse
 
 from .engine import OrchestrationError, Orchestrator, create_demo_orchestrator
+from .models import to_primitive
+from .planner import OrchestratorIntelligence
 
 
 WEB_ROOT = Path(__file__).resolve().parents[2] / "web"
@@ -18,6 +20,7 @@ class OrbisHTTPServer(ThreadingHTTPServer):
     def __init__(self, address: tuple, runtime: Orchestrator) -> None:
         super().__init__(address, OrbisRequestHandler)
         self.runtime = runtime
+        self.intelligence = OrchestratorIntelligence()
 
 
 class OrbisRequestHandler(BaseHTTPRequestHandler):
@@ -30,6 +33,9 @@ class OrbisRequestHandler(BaseHTTPRequestHandler):
             return
         if path == "/api/state":
             self._json(200, self.server.runtime.snapshot())
+            return
+        if path == "/api/scenarios":
+            self._json(200, {"scenarios": self.server.intelligence.scenarios()})
             return
         if path.startswith("/api/workflows/"):
             workflow_id = path.rsplit("/", 1)[-1]
@@ -44,6 +50,9 @@ class OrbisRequestHandler(BaseHTTPRequestHandler):
         path = urlparse(self.path).path
         try:
             payload = self._read_json()
+            if path == "/api/plans":
+                self._create_plan(payload)
+                return
             if path == "/api/workflows":
                 self._create_workflow(payload)
                 return
@@ -64,6 +73,13 @@ class OrbisRequestHandler(BaseHTTPRequestHandler):
             self._error(400, str(exc))
         except Exception as exc:
             self._error(500, f"Internal error: {exc}")
+
+    def _create_plan(self, payload: Dict[str, Any]) -> None:
+        plan = self.server.intelligence.analyze(
+            objective=str(payload.get("objective", "")).strip(),
+            environment=str(payload.get("environment", "home")).strip(),
+        )
+        self._json(201, to_primitive(plan))
 
     def _create_workflow(self, payload: Dict[str, Any]) -> None:
         workflow = self.server.runtime.create_warehouse_workflow(
@@ -156,4 +172,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
